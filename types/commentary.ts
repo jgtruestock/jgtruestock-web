@@ -18,6 +18,11 @@ export interface JGCommentary {
   publishedBody: string | null;
   publishedAt: Date | null;
 
+  // earnings version tracking (for dedup in check-earnings cron)
+  latestEarningsYear: number | null;
+  latestEarningsQuarter: number | null;  // legacy (may be undefined from FMP)
+  latestEarningsPeriod: string | null;   // e.g. "Q3" from FMP period field
+
   // status
   status: 'draft' | 'published' | 'stale';
 

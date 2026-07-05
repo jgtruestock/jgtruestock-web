@@ -8,19 +8,22 @@
     "start": "next start"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.110.0",
     "@auth/mongodb-adapter": "^3.11.2",
     "@google/generative-ai": "^0.24.1",
     "mongodb": "^7.4.0",
     "next": "16.2.10",
     "next-auth": "^4.24.14",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "xml2js": "^0.6.2"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/xml2js": "^0.4.14",
     "tailwindcss": "^4",
     "typescript": "^5"
   },

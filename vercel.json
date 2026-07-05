@@ -7,6 +7,14 @@
     {
       "path": "/api/cron/update-news",
       "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/update-gurus",
+      "schedule": "30 22 * * *"
+    },
+    {
+      "path": "/api/cron/check-earnings",
+      "schedule": "0 22 * * *"
     }
   ]
 }
