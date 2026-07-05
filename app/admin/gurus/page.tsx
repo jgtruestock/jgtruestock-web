@@ -15,6 +15,7 @@ interface TimelineItem {
   summary?: string;
   thumbnailUrl?: string;
   mentionedTickers?: string[];
+  externalUrl?: string;
 }
 
 const TYPE_CONFIG: Record<string, { icon: string; label: string; color: string }> = {
@@ -43,7 +44,30 @@ function formatDate(iso: string): string {
 
 function TimelineCard({ item }: { item: TimelineItem }) {
   const [expanded, setExpanded] = useState(false);
+  const [rawExpanded, setRawExpanded] = useState(false);
+  const [rawContent, setRawContent] = useState<string | null>(null);
+  const [rawLoading, setRawLoading] = useState(false);
   const cfg = TYPE_CONFIG[item.type] || TYPE_CONFIG.youtube;
+
+  async function handleExpandRaw(e: React.MouseEvent) {
+    e.stopPropagation();
+    if (rawContent !== null) {
+      setRawExpanded((v) => !v);
+      return;
+    }
+    setRawLoading(true);
+    try {
+      const res = await fetch(`/api/admin/gurus/content/${item._id}`);
+      const data = await res.json();
+      setRawContent(data.rawContent ?? '（無原文）');
+      setRawExpanded(true);
+    } catch {
+      setRawContent('（載入失敗）');
+      setRawExpanded(true);
+    } finally {
+      setRawLoading(false);
+    }
+  }
 
   return (
     <div
@@ -53,74 +77,134 @@ function TimelineCard({ item }: { item: TimelineItem }) {
         borderRadius: 12,
         padding: '16px 20px',
         marginBottom: 12,
-        cursor: 'pointer',
         transition: 'border-color 0.2s',
       }}
-      onClick={() => setExpanded((e) => !e)}
     >
-      {/* Header row */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-        {item.thumbnailUrl && (
-          <img
-            src={item.thumbnailUrl}
-            alt=""
-            style={{ width: 80, height: 52, objectFit: 'cover', borderRadius: 6, flexShrink: 0 }}
-          />
-        )}
-        <div style={{ flex: 1, minWidth: 0 }}>
-          {/* Source badge + date */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-            <span
-              style={{
-                background: cfg.color + '22',
-                color: cfg.color,
-                borderRadius: 6,
-                padding: '2px 8px',
-                fontSize: 12,
-                fontWeight: 600,
-                whiteSpace: 'nowrap',
-              }}
-            >
-              {cfg.icon} {cfg.label}
-            </span>
-            <span style={{ color: '#888', fontSize: 12, whiteSpace: 'nowrap' }}>
-              {item.sourceName}
-            </span>
-            <span style={{ color: '#555', fontSize: 11, marginLeft: 'auto', whiteSpace: 'nowrap' }}>
-              {formatDate(item.publishedAt)}
-            </span>
-          </div>
-
-          {/* Title */}
-          <div style={{ fontSize: 14, fontWeight: 600, color: '#e8e8e8', lineHeight: 1.4 }}>
-            {item.title}
-          </div>
-
-          {/* Tickers */}
-          {item.mentionedTickers && item.mentionedTickers.length > 0 && (
-            <div style={{ marginTop: 6, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-              {item.mentionedTickers.slice(0, 6).map((t) => (
-                <span
-                  key={t}
-                  style={{
-                    background: '#1a2a1a',
-                    color: '#4caf50',
-                    borderRadius: 4,
-                    padding: '1px 6px',
-                    fontSize: 11,
-                    fontFamily: 'monospace',
-                  }}
-                >
-                  ${t}
-                </span>
-              ))}
-            </div>
+      {/* Header row — click toggles summary */}
+      <div
+        style={{ cursor: 'pointer' }}
+        onClick={() => setExpanded((e) => !e)}
+      >
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+          {item.thumbnailUrl && (
+            <img
+              src={item.thumbnailUrl}
+              alt=""
+              style={{ width: 80, height: 52, objectFit: 'cover', borderRadius: 6, flexShrink: 0 }}
+            />
           )}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            {/* Source badge + date */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+              <span
+                style={{
+                  background: cfg.color + '22',
+                  color: cfg.color,
+                  borderRadius: 6,
+                  padding: '2px 8px',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {cfg.icon} {cfg.label}
+              </span>
+              <span style={{ color: '#888', fontSize: 12, whiteSpace: 'nowrap' }}>
+                {item.sourceName}
+              </span>
+              <span style={{ color: '#555', fontSize: 11, marginLeft: 'auto', whiteSpace: 'nowrap' }}>
+                {formatDate(item.publishedAt)}
+              </span>
+            </div>
+
+            {/* Title */}
+            <div style={{ fontSize: 14, fontWeight: 600, color: '#e8e8e8', lineHeight: 1.4 }}>
+              {item.title}
+            </div>
+
+            {/* Tickers */}
+            {item.mentionedTickers && item.mentionedTickers.length > 0 && (
+              <div style={{ marginTop: 6, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                {item.mentionedTickers.slice(0, 6).map((t) => (
+                  <span
+                    key={t}
+                    style={{
+                      background: '#1a2a1a',
+                      color: '#4caf50',
+                      borderRadius: 4,
+                      padding: '1px 6px',
+                      fontSize: 11,
+                      fontFamily: 'monospace',
+                    }}
+                  >
+                    ${t}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
+      {/* Action buttons */}
+      <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+        <button
+          onClick={() => setExpanded((e) => !e)}
+          style={{
+            background: 'transparent',
+            border: '1px solid #333',
+            borderRadius: 6,
+            color: '#aaa',
+            padding: '3px 10px',
+            fontSize: 12,
+            cursor: 'pointer',
+          }}
+        >
+          {expanded ? '▲ 收起摘要' : '▼ 展開摘要'}
+        </button>
+
+        {item.type !== 'earnings' && (
+          <button
+            onClick={handleExpandRaw}
+            disabled={rawLoading}
+            style={{
+              background: rawExpanded ? '#1a2a3a' : 'transparent',
+              border: '1px solid #2a4a6a',
+              borderRadius: 6,
+              color: rawLoading ? '#555' : '#6aaddf',
+              padding: '3px 10px',
+              fontSize: 12,
+              cursor: rawLoading ? 'not-allowed' : 'pointer',
+            }}
+          >
+            {rawLoading ? '⏳ 載入中...' : rawExpanded ? '▲ 收起原文' : '📄 展開原文'}
+          </button>
+        )}
+
+        {item.externalUrl && (
+          <a
+            href={item.externalUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: 'transparent',
+              border: '1px solid #333',
+              borderRadius: 6,
+              color: '#888',
+              padding: '3px 10px',
+              fontSize: 12,
+              textDecoration: 'none',
+              display: 'inline-block',
+            }}
+          >
+            🔗 原始連結
+          </a>
+        )}
+      </div>
+
       {/* Expanded summary */}
-      {expanded && item.summary && (
+      {expanded && (
         <div
           style={{
             marginTop: 14,
@@ -132,13 +216,39 @@ function TimelineCard({ item }: { item: TimelineItem }) {
             whiteSpace: 'pre-wrap',
           }}
         >
-          {item.summary}
+          {item.summary || '（無摘要）'}
         </div>
       )}
 
-      {expanded && !item.summary && (
-        <div style={{ marginTop: 12, color: '#666', fontSize: 13 }}>
-          （無摘要）
+      {/* Expanded raw content */}
+      {rawExpanded && rawContent !== null && (
+        <div
+          style={{
+            marginTop: 14,
+            paddingTop: 14,
+            borderTop: '1px solid #2a3a4a',
+          }}
+        >
+          <div style={{ color: '#6aaddf', fontSize: 11, marginBottom: 8, fontWeight: 600 }}>
+            📄 完整原文
+          </div>
+          <div
+            style={{
+              background: '#0d1a24',
+              border: '1px solid #1e3a50',
+              borderRadius: 8,
+              padding: '12px 14px',
+              color: '#b0c8d8',
+              fontSize: 12,
+              lineHeight: 1.7,
+              whiteSpace: 'pre-wrap',
+              maxHeight: 400,
+              overflowY: 'auto',
+              fontFamily: 'ui-monospace, monospace',
+            }}
+          >
+            {rawContent}
+          </div>
         </div>
       )}
     </div>
@@ -168,9 +278,7 @@ export default function GurusPage() {
     setFetching(true);
     setFetchResult(null);
     try {
-      const r = await fetch('/api/cron/update-gurus', {
-        method: 'GET',
-      });
+      const r = await fetch('/api/cron/update-gurus');
       const result = await r.json();
       setFetchResult(result);
       loadTimeline(filter);
@@ -222,7 +330,7 @@ export default function GurusPage() {
           >
             {fetchResult.error
               ? `❌ ${fetchResult.error}`
-              : `✅ YouTube: +${fetchResult.youtube?.processed ?? 0} | Podcast: +${fetchResult.podcast?.processed ?? 0} | X: +${fetchResult.x?.processed ?? 0}`}
+              : `✅ YouTube: +${fetchResult.youtube?.processed ?? 0} | Podcast: +${fetchResult.podcast?.processed ?? 0} | X: +${fetchResult.x?.processed ?? 0} | 封存: ${fetchResult.archived ?? 0}`}
           </div>
         )}
 
@@ -259,7 +367,7 @@ export default function GurusPage() {
         ) : (
           <>
             <div style={{ color: '#666', fontSize: 12, marginBottom: 12 }}>
-              共 {items.length} 則 · 點擊卡片展開摘要
+              共 {items.length} 則 · 點擊「展開摘要」查看 AI 摘要，「展開原文」查看完整原文
             </div>
             {items.map((item) => (
               <TimelineCard key={item._id} item={item} />

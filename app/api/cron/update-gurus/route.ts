@@ -11,6 +11,7 @@ import { summarizeGuruContent } from '@/lib/ai/summarizeGuruContent';
 import { upsertGuruContent, getExistingVideoIds, getGuruChannels } from '@/lib/db/guruContent';
 import { fetchAllPodcastEpisodes } from '@/lib/podcast/fetchPodcastEpisodes';
 import { fetchAllXPosts } from '@/lib/x/fetchXPosts';
+import { getJgtDb } from '@/lib/mongodb';
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -84,7 +85,9 @@ export async function GET(request: Request) {
           description: video.description,
           thumbnailUrl: video.thumbnailUrl,
           transcript: transcriptText,
+          rawContent: transcriptText,
           transcriptSource,
+          status: 'active',
           summary,
           mentionedTickers,
         });
@@ -118,11 +121,28 @@ export async function GET(request: Request) {
     results.x.errors.push(msg);
   }
 
+  // ── 4. Archive content older than 30 days ─────────────────────────────────
+  let archived = 0;
+  try {
+    const db = await getJgtDb();
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const archiveResult = await db.collection('guru_content').updateMany(
+      { publishedAt: { $lt: thirtyDaysAgo }, status: 'active' },
+      { $set: { status: 'archived', updatedAt: new Date() } }
+    );
+    archived = archiveResult.modifiedCount;
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[update-gurus] Archive step failed:', msg);
+  }
+
   return NextResponse.json({
     ok: true,
     youtube: results.youtube,
     podcast: results.podcast,
     x: results.x,
+    archived,
     timestamp: new Date().toISOString(),
   });
 }

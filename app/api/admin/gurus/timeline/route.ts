@@ -23,6 +23,8 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const filter = searchParams.get('type') || 'all';  // all | youtube | podcast | x | earnings
   const limit = parseInt(searchParams.get('limit') || '50', 10);
+  // includeArchived=true to also show archived content
+  const includeArchived = searchParams.get('includeArchived') === 'true';
 
   const db = await getJgtDb();
 
@@ -33,8 +35,16 @@ export async function GET(request: Request) {
     const typeFilter: Record<string, any> = {};
     if (filter !== 'all') {
       typeFilter.type = filter;
-    } else {
-      // All guru_content types
+    }
+    // Exclude archived unless requested
+    if (!includeArchived) {
+      typeFilter.$or = [
+        { status: { $exists: false } },
+        { status: null },
+        { status: 'active' },
+        { status: 'fetched' },
+        { status: 'summarized' },
+      ];
     }
 
     const contentDocs = await db
