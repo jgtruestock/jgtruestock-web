@@ -196,6 +196,7 @@ export default function StocksPage() {
                     <tr
                       key={rec._id}
                       style={{ borderBottom: '1px solid #EDEBE6', cursor: 'pointer' }}
+                      onClick={() => router.push(`/stocks/${rec.symbol}`)}
                       onMouseEnter={(e) => {
                         (e.currentTarget as HTMLTableRowElement).style.background = '#F0EDE8';
                       }}
@@ -320,6 +321,7 @@ export default function StocksPage() {
                       padding: '10px 6px',
                       cursor: 'pointer',
                     }}
+                    onClick={() => router.push(`/stocks/${rec.symbol}`)}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                       <span
