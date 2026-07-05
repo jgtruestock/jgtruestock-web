@@ -87,25 +87,37 @@ export interface SecFiling {
 
 /**
  * Fetch the latest earnings call transcript for a symbol.
- * FMP endpoint: GET /stable/earning_call_transcript?symbol={symbol}&limit=1
+ * FMP endpoint: GET /stable/earning-call-transcript?symbol={symbol}&year={year}&quarter={quarter}
+ * Auto-detects the most recent available quarter (tries up to 6 quarters back).
  */
 export async function fetchEarningsTranscript(
   symbol: string
 ): Promise<EarningsTranscript[]> {
-  try {
-    const res = await fetch(
-      `${BASE_URL}/earning_call_transcript?symbol=${encodeURIComponent(symbol)}&limit=1&apikey=${FMP_API_KEY}`
-    );
-    if (!res.ok) {
-      console.error(`[FMP] fetchEarningsTranscript ${symbol} → HTTP ${res.status}`);
-      return [];
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1;
+  // Estimate current fiscal quarter
+  let startQuarter = currentMonth <= 3 ? 1 : currentMonth <= 6 ? 2 : currentMonth <= 9 ? 3 : 4;
+  let startYear = currentYear;
+
+  // Try up to 6 quarters back to find the latest available transcript
+  for (let attempt = 0; attempt < 6; attempt++) {
+    let q = startQuarter - attempt;
+    let y = startYear;
+    while (q <= 0) { q += 4; y -= 1; }
+    try {
+      const res = await fetch(
+        `${BASE_URL}/earning-call-transcript?symbol=${encodeURIComponent(symbol)}&year=${y}&quarter=${q}&apikey=${FMP_API_KEY}`
+      );
+      if (!res.ok) continue;
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) return data;
+    } catch (err) {
+      console.error(`[FMP] fetchEarningsTranscript ${symbol} ${y}Q${q} error:`, err);
     }
-    const data = await res.json();
-    return Array.isArray(data) ? data : [];
-  } catch (err) {
-    console.error(`[FMP] fetchEarningsTranscript ${symbol} error:`, err);
-    return [];
   }
+  console.warn(`[FMP] fetchEarningsTranscript ${symbol} → no transcript found in last 6 quarters`);
+  return [];
 }
 
 /**
