@@ -27,4 +27,14 @@ export async function getDb(): Promise<Db> {
   return c.db('tw_stock');
 }
 
+export async function getJgtDb(): Promise<Db> {
+  const c = await clientPromise;
+  return c.db('jgtruestock');
+}
+
+export async function get13fDb(): Promise<Db> {
+  const c = await clientPromise;
+  return c.db('13f-tracker');
+}
+
 export default clientPromise;
