@@ -88,6 +88,9 @@ export async function GET(req: NextRequest) {
         avgGainPct: parseFloat(avgGainPct.toFixed(1)),
         positiveCount,
         positiveRate: parseFloat(positiveRate.toFixed(1)),
+        lastUpdatedAt: records.length > 0
+          ? records.reduce((latest, r) => r.mentionDate > latest ? r.mentionDate : latest, '')
+          : null,
       },
     });
   } catch (err) {

@@ -32,8 +32,8 @@ export async function GET(
   const items = content.map((item) => ({
     ...item,
     _id: item._id?.toString(),
-    // text: Chinese summary preferred, fallback to rawContent/transcript
-    text: item.summary || item.rawContent || item.transcript || '',
+    // text: deepSummary（深度中文摘要）> summary > rawContent/transcript
+    text: item.deepSummary || item.summary || item.rawContent || item.transcript || '',
   }));
 
   return NextResponse.json({ items });

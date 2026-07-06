@@ -22,6 +22,7 @@ interface Stats {
   avgGainPct: number;
   positiveCount: number;
   positiveRate: number;
+  lastUpdatedAt?: string | null;
 }
 
 type SortKey = 'gainPct' | 'mentionDate' | 'symbol';
@@ -130,6 +131,14 @@ export default function StocksPage() {
               <span>正報酬 {stats.positiveRate}%</span>
               <span style={{ color: '#CCC', margin: '0 6px' }}>｜</span>
               <span>每日收盤後自動更新</span>
+              {stats?.lastUpdatedAt && (
+                <>
+                  <span style={{ color: '#CCC', margin: '0 6px' }}>｜</span>
+                  <span style={{ fontSize: 12, color: '#999' }}>
+                    股價更新：{stats.lastUpdatedAt.slice(0, 10)}
+                  </span>
+                </>
+              )}
             </div>
           )}
           <div style={{ display: 'flex', gap: 4 }}>

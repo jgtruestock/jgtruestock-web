@@ -324,7 +324,14 @@ export default function GurusPage() {
           </a>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
-          <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>🧠 大神追蹤 · 統一時間軸</h1>
+          <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>
+            🧠 大神追蹤 · 統一時間軸
+            {items.length > 0 && (
+              <span style={{ fontSize: 12, color: '#888', fontWeight: 400, marginLeft: 12 }}>
+                上次更新：{items[0].publishedAt.slice(0, 10)}
+              </span>
+            )}
+          </h1>
           <button
             onClick={handleFetchAll}
             disabled={fetching}
