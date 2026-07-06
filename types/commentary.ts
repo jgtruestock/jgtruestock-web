@@ -1,4 +1,6 @@
 import { ObjectId } from 'mongodb';
+import type { KeyPoint } from '@/lib/ai/generateCommentary';
+export type { KeyPoint } from '@/lib/ai/generateCommentary';
 
 // ─────────────────────────────────────────────────────────
 // jg_commentary collection  (in "jgtruestock" DB)
@@ -22,6 +24,9 @@ export interface JGCommentary {
   latestEarningsYear: number | null;
   latestEarningsQuarter: number | null;  // legacy (may be undefined from FMP)
   latestEarningsPeriod: string | null;   // e.g. "Q3" from FMP period field
+
+  // key points from two-step AI analysis
+  keyPoints?: KeyPoint[];
 
   // status
   status: 'draft' | 'published' | 'stale';

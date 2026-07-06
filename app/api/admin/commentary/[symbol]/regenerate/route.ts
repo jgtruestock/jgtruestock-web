@@ -51,7 +51,7 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     const rawNews = await fetchStockNews(symbol, 30);
 
     // 4. Generate AI commentary
-    const { title, body, model } = await generateCommentary(
+    const { title, body, model, keyPoints } = await generateCommentary(
       symbol,
       transcript,
       rawNews,
@@ -67,6 +67,7 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
       draftBody: body,
       draftGeneratedAt: now,
       draftModel: model,
+      keyPoints,
       status: 'draft',
       sourcesSummary: {
         earningsTranscriptCount: transcript ? 1 : 0,
@@ -84,6 +85,7 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
         draftBody: body,
         draftGeneratedAt: now.toISOString(),
         draftModel: model,
+        keyPoints,
         status: 'draft',
       },
     });

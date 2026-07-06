@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useParams } from 'next/navigation';
 import Navbar from '@/components/Navbar';
+import type { KeyPoint, PromiseCategory, PromiseStatus } from '@/types/commentary';
 
 interface CommentaryDetail {
   symbol: string;
@@ -17,7 +18,34 @@ interface CommentaryDetail {
   publishedBody: string | null;
   publishedAt: string | null;
   updatedAt: string | null;
+  keyPoints?: KeyPoint[];
 }
+
+const CATEGORY_LABELS: Record<PromiseCategory, string> = {
+  revenue: '📊 revenue',
+  margin: '📈 margin',
+  capex: '🏭 capex',
+  product: '📱 product',
+  headcount: '👥 headcount',
+  guidance: '🔭 guidance',
+  market_expansion: '🌍 market',
+};
+
+const STATUS_ICONS: Record<PromiseStatus, string> = {
+  fulfilled: '✅',
+  partially: '⚠️',
+  broken: '❌',
+  pending: '⏳',
+  unclear: '❓',
+};
+
+const STATUS_LABEL: Record<PromiseStatus, string> = {
+  fulfilled: '已達成',
+  partially: '部分達成',
+  broken: '未達成',
+  pending: '待確認',
+  unclear: '資訊不足',
+};
 
 const STATUS_LABELS: Record<string, string> = {
   published: '已發布',
@@ -397,6 +425,75 @@ export default function AdminCommentarySymbolPage() {
             >
               {data.publishedBody}
             </p>
+          </div>
+        )}
+
+        {/* Key Points Tracker */}
+        {data?.keyPoints && data.keyPoints.length > 0 && (
+          <div
+            style={{
+              background: '#fff',
+              borderRadius: 10,
+              border: '1px solid #E8E4DC',
+              padding: '24px',
+              marginBottom: 20,
+            }}
+          >
+            <h3 style={{ fontSize: 15, fontWeight: 600, color: '#1A1A1A', marginBottom: 16 }}>
+              【要點追蹤】
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {data.keyPoints.map((kp, i) => (
+                <div
+                  key={i}
+                  style={{
+                    borderLeft: `3px solid ${
+                      kp.status === 'fulfilled' ? '#1A7340'
+                      : kp.status === 'partially' ? '#c9a84c'
+                      : kp.status === 'broken' ? '#c53030'
+                      : kp.status === 'pending' ? '#555'
+                      : '#999'
+                    }`,
+                    paddingLeft: 12,
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, flexWrap: 'wrap' }}>
+                    <span
+                      style={{
+                        fontSize: 12,
+                        fontWeight: 600,
+                        color: '#888',
+                        background: '#F5F3EE',
+                        borderRadius: 4,
+                        padding: '2px 6px',
+                        flexShrink: 0,
+                      }}
+                    >
+                      {CATEGORY_LABELS[kp.category] ?? kp.category}
+                    </span>
+                    {kp.targetQuarter && (
+                      <span style={{ fontSize: 12, color: '#aaa' }}>{kp.targetQuarter}</span>
+                    )}
+                  </div>
+                  <p style={{ fontSize: 14, fontWeight: 600, color: '#1A1A1A', margin: '4px 0 2px' }}>
+                    {kp.summary}
+                  </p>
+                  {kp.originalText && (
+                    <p style={{ fontSize: 12, color: '#888', fontStyle: 'italic', margin: '0 0 6px' }}>
+                      "{kp.originalText}"
+                    </p>
+                  )}
+                  <p style={{ fontSize: 13, color: '#444', margin: '0 0 2px' }}>
+                    {STATUS_ICONS[kp.status]} <strong>{STATUS_LABEL[kp.status]}</strong>：{kp.statusNote}
+                  </p>
+                  {kp.newsEvidence && kp.newsEvidence !== '—' && (
+                    <p style={{ fontSize: 12, color: '#999', margin: 0 }}>
+                      依据：{kp.newsEvidence}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         )}
 

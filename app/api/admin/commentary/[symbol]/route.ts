@@ -36,6 +36,7 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
     publishedBody: doc.publishedBody ?? null,
     publishedAt: doc.publishedAt?.toISOString() ?? null,
     updatedAt: doc.updatedAt?.toISOString() ?? null,
+    keyPoints: doc.keyPoints ?? [],
   });
 }
 
