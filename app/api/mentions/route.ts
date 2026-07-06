@@ -53,7 +53,7 @@ export async function GET(req: NextRequest) {
     const records = allRecords.map((rec) => ({
       _id: rec._id?.toString() ?? rec.symbol,
       symbol: rec.symbol as string,
-      companyName: (rec.name as string) || (rec.symbol as string),
+      companyName: (rec.companyName as string) || (rec.name as string) || (rec.symbol as string),
       exchange: (rec.exchange as string) || 'US',
       mentionDate: rec.mentionDate as string,
       priceAtMention: (rec.mentionClose as number) || 0,
