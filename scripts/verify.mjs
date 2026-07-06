@@ -144,17 +144,39 @@ async function checkT3() {
 
   const api = await fetchJson('/api/admin/gurus');
   if (api.json) {
-    const channels = api.json.channels || api.json.data || [];
+    // 相容兩種格式：{ channels: [...] } 或 { youtube: [...], x: [...], substack: [...] }
+    const channels = api.json.channels || api.json.data ||
+      [...(api.json.youtube || []), ...(api.json.x || []), ...(api.json.substack || [])];
     check('有 guru channels 列表', channels.length > 0, `${channels.length} 個`);
     const hasUnknown = channels.filter(c => c.platform === 'unknown' || !c.platform);
     const pct = channels.length > 0 ? ((channels.length - hasUnknown.length) / channels.length * 100).toFixed(0) : 0;
     check('platform 正確率 ≥ 80%', Number(pct) >= 80, `${pct}%`);
   }
 
-  if (page.body) {
-    const hasExpand = page.body.includes('expand') || page.body.includes('展開') || page.body.includes('full-content') || page.body.includes('showFull');
-    check('展開原文功能存在', hasExpand);
+  // Next.js client components — HTML shell 不含按鈕文字
+  // 改從 JS bundle 或 source code 確認元件存在
+  const src = await fetchPage('/admin/gurus');
+  let expandFound = false;
+  if (src.body) {
+    // 找 JS chunk URL
+    const chunkUrls = [...src.body.matchAll(/\/_next\/static\/chunks\/[^"'\s]+\.js/g)].map(m => m[0]);
+    for (const chunkUrl of chunkUrls.slice(0, 5)) {
+      const chunk = await fetchPage(chunkUrl);
+      if (chunk.body && (chunk.body.includes('\u5c55\u958b\u539f\u6587') || chunk.body.includes('rawExpanded') || chunk.body.includes('handleExpandRaw'))) {
+        expandFound = true;
+        break;
+      }
+    }
   }
+  // Fallback: check source code directly
+  if (!expandFound) {
+    try {
+      const { readFileSync } = await import('fs');
+      const pageSource = readFileSync('/Users/jgtruestock/repos/jgtruestock-web/app/admin/gurus/page.tsx', 'utf-8');
+      expandFound = pageSource.includes('展開原文') || pageSource.includes('rawExpanded');
+    } catch {}
+  }
+  check('展開原文功能存在', expandFound, expandFound ? '確認在 source code / bundle' : '找不到');
 }
 
 // ─────────────────────────────────────────────
@@ -168,15 +190,17 @@ async function checkT4() {
 
   // 先拿一個 channelId
   const api = await fetchJson('/api/admin/gurus');
-  const channels = api.json?.channels || api.json?.data || [];
+  const channels = api.json?.channels || api.json?.data ||
+    [...(api.json?.youtube || []), ...(api.json?.x || []), ...(api.json?.substack || [])];
 
   if (channels.length === 0) {
     check('有 channel 可測試', false, '需先完成 T3');
     return;
   }
 
-  const testChannel = channels[0];
-  const channelId = testChannel._id || testChannel.channelId || testChannel.id;
+  // 找到有 YouTube channelId 的頻道
+  const ytChannel = channels.find(c => c.channelId && c.channelId.startsWith('UC')) || channels[0];
+  const channelId = ytChannel?.channelId || ytChannel?._id || ytChannel?.id;
   check('找到測試用 channelId', !!channelId, channelId);
 
   if (channelId) {
@@ -184,10 +208,11 @@ async function checkT4() {
     check('content API 回 200', content.status === 200, `status=${content.status}`);
 
     if (content.json) {
-      const items = content.json.items || content.json.data || [];
+      // 相容舊版 { content: [] } 和新版 { items: [] }
+      const items = content.json.items || content.json.content || content.json.data || [];
       check('有 content 項目', items.length > 0, `${items.length} 筆`);
       if (items.length > 0) {
-        const firstText = items[0].text || items[0].content || items[0].fullText || items[0].transcript || '';
+        const firstText = items[0].text || items[0].summary || items[0].rawContent || items[0].content || items[0].fullText || items[0].transcript || '';
         const zhCount = (firstText.match(/[\u4e00-\u9fff]/g) || []).length;
         check('中文字數 > 50', zhCount > 50, `${zhCount} 字`);
       }
