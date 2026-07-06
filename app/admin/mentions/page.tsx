@@ -26,7 +26,7 @@ const ADMIN_DISCORD_ID = process.env.NEXT_PUBLIC_ADMIN_DISCORD_ID || '';
 
 export default function AdminMentionsPage() {
   // Auth disabled for preview
-  const session = null;
+  const session: { user?: any } | null = null;
   const status = 'authenticated'; // bypass
   const router = useRouter();
   const [symbol, setSymbol] = useState('');

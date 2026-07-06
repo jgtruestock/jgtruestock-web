@@ -59,7 +59,7 @@ function StatusDot({ status }: { status: string | null }) {
 
 export default function AdminCommentaryPage() {
   // Auth disabled for preview
-  const session = null;
+  const session: { user?: any } | null = null;
   const status = 'authenticated'; // bypass
   const router = useRouter();
   const [records, setRecords] = useState<CommentaryRecord[]>([]);

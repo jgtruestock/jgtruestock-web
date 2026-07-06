@@ -17,7 +17,6 @@ interface RouteParams {
 export async function POST(req: NextRequest, { params }: RouteParams) {
   // Auth disabled for preview
   const discordId = "preview-admin"; // bypass, { status: 403 });
-  }
 
   const { symbol: rawSymbol } = await params;
   const symbol = rawSymbol.toUpperCase();
