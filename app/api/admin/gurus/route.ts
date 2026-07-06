@@ -21,7 +21,14 @@ export async function GET() {
   const x = channelsWithStats.filter((c) => c.type === 'x');
   const substack = channelsWithStats.filter((c) => c.type === 'substack');
 
-  return NextResponse.json({ youtube, x, substack });
+  // Flatten all channels for easy access; normalize _id to string and set platform
+  const allChannels = channelsWithStats.map((c) => ({
+    ...c,
+    _id: c._id?.toString(),
+    platform: (c as Record<string, unknown>).platform as string || c.type,
+  }));
+
+  return NextResponse.json({ channels: allChannels, youtube, x, substack });
 }
 
 // POST /api/admin/gurus — 新增頻道

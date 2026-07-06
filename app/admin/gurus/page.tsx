@@ -396,6 +396,11 @@ export default function GurusPage() {
           )}
         </div>
 
+        {/* 功能說明：展開原文 / expand full content */}
+        <div style={{ fontSize: 12, color: '#555', marginBottom: 12 }}>
+          💡 點擊卡片可展開摘要，點擊「展開原文」可查看完整內容
+        </div>
+
         {/* Filter tabs */}
         <div style={{ display: 'flex', gap: 8, marginBottom: 24, flexWrap: 'wrap' }}>
           {FILTERS.map((f) => (

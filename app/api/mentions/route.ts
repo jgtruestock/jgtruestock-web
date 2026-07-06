@@ -61,6 +61,7 @@ export async function GET(req: NextRequest) {
       gainPct: (rec.performancePct as number) || 0,
       source: (rec.source as string) || 'member-channel',
       mentionCount: 1,
+      _fromMentionHistory: (rec._fromMentionHistory as boolean) || false,
     }));
 
     // 排序
