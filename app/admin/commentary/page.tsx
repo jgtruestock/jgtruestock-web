@@ -217,16 +217,23 @@ export default function AdminCommentaryPage() {
         </div>
 
         {/* Table */}
-        <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #E8E4DC', overflow: 'hidden' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
+        <style>{`
+          @media (max-width: 640px) {
+            .commentary-col-hide { display: none !important; }
+            .commentary-row { cursor: pointer; }
+            .commentary-row:active { background: #F0EDE8 !important; }
+          }
+        `}</style>
+        <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #E8E4DC', overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14, minWidth: 340 }}>
             <thead>
               <tr style={{ background: '#F5F3EE', borderBottom: '1px solid #E8E4DC' }}>
                 <th style={{ padding: '10px 16px', textAlign: 'left', fontWeight: 600, color: '#666' }}>代號</th>
                 <th style={{ padding: '10px 16px', textAlign: 'left', fontWeight: 600, color: '#666' }}>公司</th>
-                <th style={{ padding: '10px 16px', textAlign: 'left', fontWeight: 600, color: '#666' }}>提股日</th>
+                <th className="commentary-col-hide" style={{ padding: '10px 16px', textAlign: 'left', fontWeight: 600, color: '#666' }}>提股日</th>
                 <th style={{ padding: '10px 16px', textAlign: 'left', fontWeight: 600, color: '#666' }}>狀態</th>
-                <th style={{ padding: '10px 16px', textAlign: 'left', fontWeight: 600, color: '#666' }}>草稿時間</th>
-                <th style={{ padding: '10px 16px', textAlign: 'left', fontWeight: 600, color: '#666' }}>發布時間</th>
+                <th className="commentary-col-hide" style={{ padding: '10px 16px', textAlign: 'left', fontWeight: 600, color: '#666' }}>草稿時間</th>
+                <th className="commentary-col-hide" style={{ padding: '10px 16px', textAlign: 'left', fontWeight: 600, color: '#666' }}>發布時間</th>
                 <th style={{ padding: '10px 16px', textAlign: 'center', fontWeight: 600, color: '#666' }}>操作</th>
               </tr>
             </thead>
@@ -241,29 +248,32 @@ export default function AdminCommentaryPage() {
               {filtered.map((r, i) => (
                 <tr
                   key={r.symbol}
+                  className="commentary-row"
                   style={{
                     borderBottom: i < filtered.length - 1 ? '1px solid #F0EDE6' : 'none',
                     background: i % 2 === 0 ? '#fff' : '#FAFAF8',
+                    cursor: 'pointer',
                   }}
+                  onClick={() => router.push(`/admin/commentary/${r.symbol}`)}
                 >
                   <td style={{ padding: '12px 16px', fontWeight: 700, color: '#1A1A1A' }}>{r.symbol}</td>
-                  <td style={{ padding: '12px 16px', color: '#333', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <td style={{ padding: '12px 16px', color: '#333', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {r.companyName}
                   </td>
-                  <td style={{ padding: '12px 16px', color: '#666' }}>{r.mentionDate?.slice(0, 10) ?? '—'}</td>
+                  <td className="commentary-col-hide" style={{ padding: '12px 16px', color: '#666' }}>{r.mentionDate?.slice(0, 10) ?? '—'}</td>
                   <td style={{ padding: '12px 16px' }}>
                     <StatusDot status={r.status} />
                   </td>
-                  <td style={{ padding: '12px 16px', color: '#888', fontSize: 12 }}>
+                  <td className="commentary-col-hide" style={{ padding: '12px 16px', color: '#888', fontSize: 12 }}>
                     {r.draftGeneratedAt ? r.draftGeneratedAt.slice(0, 10) : '—'}
                   </td>
-                  <td style={{ padding: '12px 16px', color: '#888', fontSize: 12 }}>
+                  <td className="commentary-col-hide" style={{ padding: '12px 16px', color: '#888', fontSize: 12 }}>
                     {r.publishedAt ? r.publishedAt.slice(0, 10) : '—'}
                   </td>
                   <td style={{ padding: '12px 16px', textAlign: 'center' }}>
                     <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
                       <button
-                        onClick={() => handleGenerate(r.symbol)}
+                        onClick={(e) => { e.stopPropagation(); handleGenerate(r.symbol); }}
                         disabled={generating === r.symbol}
                         title="重新生成 AI 草稿"
                         style={{
@@ -280,7 +290,7 @@ export default function AdminCommentaryPage() {
                         {generating === r.symbol ? '生成中...' : '🤖 生成草稿'}
                       </button>
                       <button
-                        onClick={() => router.push(`/admin/commentary/${r.symbol}`)}
+                        onClick={(e) => { e.stopPropagation(); router.push(`/admin/commentary/${r.symbol}`); }}
                         style={{
                           padding: '5px 10px',
                           borderRadius: 5,
