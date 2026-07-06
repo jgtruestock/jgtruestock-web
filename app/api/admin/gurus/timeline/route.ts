@@ -34,7 +34,8 @@ export async function GET(request: Request) {
   if (filter === 'all' || filter === 'youtube' || filter === 'podcast' || filter === 'x') {
     const typeFilter: Record<string, any> = {};
     if (filter !== 'all') {
-      typeFilter.type = filter;
+      // DB may store type in 'type' or 'platform' field
+      typeFilter.$and = [{ $or: [{ type: filter }, { platform: filter }] }];
     }
     // Exclude archived unless requested
     if (!includeArchived) {
