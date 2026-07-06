@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { get13fDb } from '@/lib/mongodb';
+import { get13fDb, getJgtDb } from '@/lib/mongodb';
 
 export async function GET(req: NextRequest) {
   try {
@@ -23,6 +23,28 @@ export async function GET(req: NextRequest) {
     }
     for (const item of manual) {
       symbolMap[item.symbol] = { ...symbolMap[item.symbol], ...item, isManualPick: true };
+    }
+
+    // 合併 jgtruestock DB 的 jg_mention_history
+    const jgtDb = await getJgtDb();
+    const mentionHistory = await jgtDb.collection('jg_mention_history').find({}).toArray();
+    for (const item of mentionHistory) {
+      const sym = item.symbol as string;
+      if (sym) {
+        symbolMap[sym] = {
+          ...symbolMap[sym],
+          _id: item._id,
+          symbol: sym,
+          name: item.companyName || sym,
+          exchange: item.exchange || (symbolMap[sym]?.exchange as string) || 'US',
+          mentionDate: item.mentionDate || (symbolMap[sym]?.mentionDate as string),
+          mentionClose: item.priceAtMention ?? (symbolMap[sym]?.mentionClose as number),
+          latestClose: item.currentPrice ?? (symbolMap[sym]?.latestClose as number),
+          performancePct: item.gainPct ?? (symbolMap[sym]?.performancePct as number),
+          source: item.source || (symbolMap[sym]?.source as string) || 'jg-mention',
+          _fromMentionHistory: true,
+        };
+      }
     }
 
     const allRecords = Object.values(symbolMap);

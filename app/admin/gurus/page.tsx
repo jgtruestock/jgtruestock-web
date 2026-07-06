@@ -201,6 +201,25 @@ function TimelineCard({ item }: { item: TimelineItem }) {
             🔗 原始連結
           </a>
         )}
+
+        <a
+          href={`/admin/gurus/content/${item._id}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            background: 'transparent',
+            border: '1px solid #2a4a2a',
+            borderRadius: 6,
+            color: '#4caf50',
+            padding: '3px 10px',
+            fontSize: 12,
+            textDecoration: 'none',
+            display: 'inline-block',
+          }}
+        >
+          📄 查看完整內容
+        </a>
       </div>
 
       {/* Expanded summary */}
@@ -261,6 +280,7 @@ export default function GurusPage() {
   const [filter, setFilter] = useState<ContentType>('all');
   const [fetching, setFetching] = useState(false);
   const [fetchResult, setFetchResult] = useState<any>(null);
+  const [dateFilter, setDateFilter] = useState('');
 
   const loadTimeline = (f: ContentType) => {
     setLoading(true);
@@ -295,6 +315,14 @@ export default function GurusPage() {
       <main style={{ maxWidth: 900, margin: '0 auto', padding: '32px 20px' }}>
 
         {/* Header */}
+        <div style={{ marginBottom: 12 }}>
+          <a
+            href="/admin/gurus/channels"
+            style={{ fontSize: 13, color: '#888', textDecoration: 'none', border: '1px solid #2a2a2a', borderRadius: 6, padding: '4px 12px' }}
+          >
+            ⚙️ 頻道管理
+          </a>
+        </div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
           <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>🧠 大神追蹤 · 統一時間軸</h1>
           <button
@@ -334,6 +362,40 @@ export default function GurusPage() {
           </div>
         )}
 
+        {/* Date filter */}
+        <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
+          <label style={{ fontSize: 13, color: '#888' }}>📅 日期篩選（顯示此日期之後）：</label>
+          <input
+            type="date"
+            value={dateFilter}
+            onChange={(e) => setDateFilter(e.target.value)}
+            style={{
+              background: '#1a1a1a',
+              border: '1px solid #333',
+              borderRadius: 6,
+              color: '#e8e8e8',
+              padding: '5px 10px',
+              fontSize: 13,
+            }}
+          />
+          {dateFilter && (
+            <button
+              onClick={() => setDateFilter('')}
+              style={{
+                background: 'transparent',
+                border: '1px solid #444',
+                borderRadius: 6,
+                color: '#888',
+                padding: '4px 10px',
+                fontSize: 12,
+                cursor: 'pointer',
+              }}
+            >
+              清除
+            </button>
+          )}
+        </div>
+
         {/* Filter tabs */}
         <div style={{ display: 'flex', gap: 8, marginBottom: 24, flexWrap: 'wrap' }}>
           {FILTERS.map((f) => (
@@ -364,16 +426,23 @@ export default function GurusPage() {
           <div style={{ color: '#555', textAlign: 'center', padding: 60 }}>
             暫無資料。點擊「立刻更新全部」抓取最新內容。
           </div>
-        ) : (
-          <>
-            <div style={{ color: '#666', fontSize: 12, marginBottom: 12 }}>
-              共 {items.length} 則 · 點擊「展開摘要」查看 AI 摘要，「展開原文」查看完整原文
-            </div>
-            {items.map((item) => (
-              <TimelineCard key={item._id} item={item} />
-            ))}
-          </>
-        )}
+        ) : (() => {
+          const filtered = dateFilter
+            ? items.filter((item) => new Date(item.publishedAt) >= new Date(dateFilter))
+            : items;
+          return (
+            <>
+              <div style={{ color: '#666', fontSize: 12, marginBottom: 12 }}>
+                共 {filtered.length} 則
+                {dateFilter && ` (${dateFilter} 之後)`}
+                · 點擊「展開摘要」查看 AI 摘要，「展開原文」查看完整原文
+              </div>
+              {filtered.map((item) => (
+                <TimelineCard key={item._id} item={item} />
+              ))}
+            </>
+          );
+        })()}
       </main>
     </div>
   );

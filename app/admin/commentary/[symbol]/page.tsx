@@ -291,6 +291,27 @@ export default function AdminCommentarySymbolPage() {
           </div>
         </div>
 
+        {/* Transcript link */}
+        <div style={{ marginBottom: 16 }}>
+          <a
+            href={`/admin/commentary/${symbol}/transcript`}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: 'inline-block',
+              fontSize: 13,
+              color: '#555',
+              textDecoration: 'none',
+              border: '1px solid #D5D0C5',
+              borderRadius: 6,
+              padding: '6px 14px',
+              background: '#FFF',
+            }}
+          >
+            📄 查看完整逃字稿 ↗
+          </a>
+        </div>
+
         {/* Action buttons */}
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 32 }}>
           <button
