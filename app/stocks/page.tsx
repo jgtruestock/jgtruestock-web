@@ -35,6 +35,7 @@ export default function StocksPage() {
   const [sortKey, setSortKey] = useState<SortKey>('gainPct');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [loading, setLoading] = useState(true);
+  const [navigating, setNavigating] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
     try {
@@ -188,13 +189,19 @@ export default function StocksPage() {
                   return (
                     <tr
                       key={rec._id}
-                      style={{ borderBottom: '1px solid #EDEBE6', cursor: 'pointer' }}
-                      onClick={() => router.push(`/stocks/${rec.symbol}`)}
+                      style={{
+                        borderBottom: '1px solid #EDEBE6',
+                        cursor: navigating === rec.symbol ? 'wait' : 'pointer',
+                        background: navigating === rec.symbol ? '#F5E6D0' : undefined,
+                        opacity: navigating && navigating !== rec.symbol ? 0.5 : 1,
+                        transition: 'background 0.1s, opacity 0.1s',
+                      }}
+                      onClick={() => { setNavigating(rec.symbol); router.push(`/stocks/${rec.symbol}`); }}
                       onMouseEnter={(e) => {
-                        (e.currentTarget as HTMLTableRowElement).style.background = '#F0EDE8';
+                        if (!navigating) (e.currentTarget as HTMLTableRowElement).style.background = '#F0EDE8';
                       }}
                       onMouseLeave={(e) => {
-                        (e.currentTarget as HTMLTableRowElement).style.background = '';
+                        if (!navigating) (e.currentTarget as HTMLTableRowElement).style.background = '';
                       }}
                     >
                       <td
@@ -287,14 +294,24 @@ export default function StocksPage() {
                       </td>
                       <td
                         style={{
-                          padding: '10px 8px',
+                          padding: '6px 8px',
                           textAlign: 'center',
-                          color: '#BBB',
-                          fontSize: 14,
-                          width: 40,
+                          width: 56,
                         }}
                       >
-                        →
+                        <span style={{
+                          display: 'inline-block',
+                          background: navigating === rec.symbol ? '#C0392B' : '#E8E3DC',
+                          color: navigating === rec.symbol ? '#fff' : '#555',
+                          fontSize: 12,
+                          fontWeight: 600,
+                          padding: '3px 10px',
+                          borderRadius: 4,
+                          whiteSpace: 'nowrap',
+                          transition: 'background 0.1s',
+                        }}>
+                          {navigating === rec.symbol ? '載入中...' : '查看 →'}
+                        </span>
                       </td>
                     </tr>
                   );
