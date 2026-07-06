@@ -56,9 +56,11 @@ export async function GET(request: Request) {
       .toArray();
 
     for (const doc of contentDocs) {
+      // prefer platform over type for display classification
+      const effectivePlatform = doc.platform || doc.type;
       const contentType: 'youtube' | 'podcast' | 'x' =
-        doc.type === 'podcast' ? 'podcast' :
-        doc.type === 'x' ? 'x' :
+        effectivePlatform === 'podcast' ? 'podcast' :
+        effectivePlatform === 'x' ? 'x' :
         'youtube';
 
       items.push({

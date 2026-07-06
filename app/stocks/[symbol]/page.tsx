@@ -1,10 +1,12 @@
+export const revalidate = 3600; // ISR: 每小時重新生成一次，幾千人點同一支股票只打一次 FMP API
+
 import { redirect } from 'next/navigation';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { get13fDb } from '@/lib/mongodb';
+import { get13fDb, getJgtDb } from '@/lib/mongodb';
 import { getCommentary } from '@/lib/db/commentary';
 import { getStockNews, upsertStockNews } from '@/lib/db/stockNews';
-import { fetchStockNews } from '@/lib/fmp';
+import { fetchStockNews, fetchEarningsTranscript, EarningsTranscript } from '@/lib/fmp';
 import Navbar from '@/components/Navbar';
 import type { JGStockNewsArticle } from '@/types/commentary';
 
@@ -13,6 +15,37 @@ interface StockPageProps {
 }
 
 // ─── Data helpers ────────────────────────────────────────────────────────────
+
+async function getOrFetchTranscript(symbol: string): Promise<EarningsTranscript[]> {
+  try {
+    // 1. 先查 jgtruestock.jg_transcripts collection
+    const db = await getJgtDb();
+    const cached = await db.collection('jg_transcripts').findOne({ symbol });
+
+    // 如果有快取且不超過 7 天，直接用
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    if (cached && new Date(cached.fetchedAt) > sevenDaysAgo) {
+      return cached.transcripts as EarningsTranscript[];
+    }
+
+    // 2. 打 FMP API
+    const transcripts = await fetchEarningsTranscript(symbol);
+
+    // 3. 存進 DB（只在有結果時才寫入）
+    if (transcripts.length > 0) {
+      await db.collection('jg_transcripts').updateOne(
+        { symbol },
+        { $set: { symbol, transcripts, fetchedAt: new Date() } },
+        { upsert: true }
+      );
+    }
+
+    return transcripts;
+  } catch (err) {
+    console.error(`[getOrFetchTranscript] ${symbol} error:`, err);
+    return [];
+  }
+}
 
 async function getStockInfo(symbol: string) {
   try {

@@ -68,6 +68,7 @@ export default function AdminCommentaryPage() {
   const [filter, setFilter] = useState<'all' | 'draft' | 'published' | 'stale' | 'none'>('all');
   const [search, setSearch] = useState('');
   const [generating, setGenerating] = useState<string | null>(null);
+  const [generatingStatus, setGeneratingStatus] = useState<string>('');
   const [message, setMessage] = useState('');
 
   const discordId = (session?.user as any)?.discordId;
@@ -113,20 +114,55 @@ export default function AdminCommentaryPage() {
 
   const handleGenerate = async (symbol: string) => {
     setGenerating(symbol);
+    setGeneratingStatus('⏳ 排隊中...');
     setMessage('');
     try {
-      const res = await fetch(`/api/admin/commentary/${symbol}/regenerate`, { method: 'POST' });
+      // Step 1: 建立 async job
+      const res = await fetch(`/api/admin/commentary/${symbol}/generate-async`, { method: 'POST' });
       const data = await res.json();
-      if (res.ok) {
-        setMessage(`✅ ${symbol} 草稿已生成：${data.commentary?.draftTitle ?? ''}`);
-        await fetchData();
-      } else {
-        setMessage(`❌ ${symbol} 生成失敗：${data.error ?? 'unknown'}`);
+      if (!res.ok) {
+        setMessage(`❌ ${symbol} 建立任務失敗：${data.error ?? 'unknown'}`);
+        return;
+      }
+      const { jobId } = data;
+
+      // Step 2: 輪詢 job 狀態（每 3 秒，最多 3 分鐘）
+      const maxWaitMs = 3 * 60 * 1000;
+      const pollIntervalMs = 3000;
+      const startTime = Date.now();
+
+      while (true) {
+        await new Promise((r) => setTimeout(r, pollIntervalMs));
+
+        if (Date.now() - startTime > maxWaitMs) {
+          setMessage(`⏰ ${symbol} 逾時，請稍後重試`);
+          return;
+        }
+
+        try {
+          const statusRes = await fetch(`/api/admin/commentary/${symbol}/job-status?jobId=${jobId}`);
+          const statusData = await statusRes.json();
+
+          if (statusData.status === 'completed') {
+            setMessage(`✅ ${symbol} 草稿已生成：${statusData.result?.title ?? ''}`);
+            await fetchData();
+            return;
+          } else if (statusData.status === 'failed') {
+            setMessage(`❌ ${symbol} 生成失敗：${statusData.error ?? 'unknown'}`);
+            return;
+          } else if (statusData.status === 'processing') {
+            setGeneratingStatus('⚙️ 生成中...');
+          }
+          // pending: 繼續等
+        } catch (pollErr) {
+          // 網路短暫錯誤，繼續輪詢
+        }
       }
     } catch (err: any) {
       setMessage(`❌ ${symbol} 錯誤：${err?.message}`);
     } finally {
       setGenerating(null);
+      setGeneratingStatus('');
     }
   };
 
@@ -287,7 +323,7 @@ export default function AdminCommentaryPage() {
                           fontWeight: 500,
                         }}
                       >
-                        {generating === r.symbol ? '生成中...' : '🤖 生成草稿'}
+                        {generating === r.symbol ? (generatingStatus || '⏳ 排隊中...') : '🤖 生成草稿'}
                       </button>
                       <button
                         onClick={(e) => { e.stopPropagation(); router.push(`/admin/commentary/${r.symbol}`); }}

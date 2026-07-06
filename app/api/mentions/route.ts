@@ -81,18 +81,25 @@ export async function GET(req: NextRequest) {
     const positiveCount = records.filter((r) => r.gainPct > 0).length;
     const positiveRate = total > 0 ? (positiveCount / total) * 100 : 0;
 
-    return NextResponse.json({
-      records,
-      stats: {
-        total,
-        avgGainPct: parseFloat(avgGainPct.toFixed(1)),
-        positiveCount,
-        positiveRate: parseFloat(positiveRate.toFixed(1)),
-        lastUpdatedAt: records.length > 0
-          ? records.reduce((latest, r) => r.mentionDate > latest ? r.mentionDate : latest, '')
-          : null,
+    return NextResponse.json(
+      {
+        records,
+        stats: {
+          total,
+          avgGainPct: parseFloat(avgGainPct.toFixed(1)),
+          positiveCount,
+          positiveRate: parseFloat(positiveRate.toFixed(1)),
+          lastUpdatedAt: records.length > 0
+            ? records.reduce((latest, r) => r.mentionDate > latest ? r.mentionDate : latest, '')
+            : null,
+        },
       },
-    });
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+        },
+      }
+    );
   } catch (err) {
     console.error('GET /api/mentions error:', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
