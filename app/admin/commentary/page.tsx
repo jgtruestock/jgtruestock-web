@@ -58,9 +58,7 @@ function StatusDot({ status }: { status: string | null }) {
 }
 
 export default function AdminCommentaryPage() {
-  // Auth disabled for preview
-  const session: { user?: any } | null = null;
-  const status = 'authenticated'; // bypass
+  const { data: session, status } = useSession();
   const router = useRouter();
   const [records, setRecords] = useState<CommentaryRecord[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
@@ -73,10 +71,13 @@ export default function AdminCommentaryPage() {
 
   const discordId = (session?.user as any)?.discordId;
   const adminId = process.env.NEXT_PUBLIC_ADMIN_DISCORD_ID;
-  const userIsAdmin = discordId === adminId;
+  // Primary admin check via discordId comparison; NEXT_PUBLIC_ADMIN_DISCORD_ID is for UI only
+  const userIsAdmin = !!discordId && !!adminId && discordId === adminId;
 
   useEffect(() => {
-    
+    if (status === 'unauthenticated') {
+      router.push('/login');
+    }
   }, [status, router]);
 
   const fetchData = useCallback(async () => {
@@ -97,7 +98,9 @@ export default function AdminCommentaryPage() {
   }, [router]);
 
   useEffect(() => {
-    fetchData(); // Auth disabled
+    if (status === 'authenticated') {
+      fetchData();
+    }
   }, [status, fetchData]);
 
   const filtered = records.filter((r) => {

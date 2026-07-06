@@ -25,9 +25,7 @@ interface MentionRecord {
 const ADMIN_DISCORD_ID = process.env.NEXT_PUBLIC_ADMIN_DISCORD_ID || '';
 
 export default function AdminMentionsPage() {
-  // Auth disabled for preview
-  const session: { user?: any } | null = null;
-  const status = 'authenticated'; // bypass
+  const { data: session, status } = useSession();
   const router = useRouter();
   const [symbol, setSymbol] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
@@ -44,6 +42,9 @@ export default function AdminMentionsPage() {
   const isAdmin = discordId === process.env.NEXT_PUBLIC_ADMIN_DISCORD_ID;
 
   useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/login');
+    }
   }, [status, router]);
 
   const fetchRecent = useCallback(async () => {
@@ -57,7 +58,7 @@ export default function AdminMentionsPage() {
   }, []);
 
   useEffect(() => {
-    if (true) {
+    if (status === 'authenticated') {
       fetchRecent();
     }
   }, [status, fetchRecent]);

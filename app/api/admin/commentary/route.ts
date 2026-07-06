@@ -14,7 +14,10 @@ interface PickRecord {
 }
 
 export async function GET(req: NextRequest) {
-  // Auth disabled for preview
+  const session = await getServerSession(authOptions);
+  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!isAdmin((session.user as any)?.discordId)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+
   try {
     // 1. Get all active symbols from 13f-tracker DB
     const db13f = await get13fDb();

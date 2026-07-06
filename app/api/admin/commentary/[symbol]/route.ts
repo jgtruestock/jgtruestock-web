@@ -13,8 +13,9 @@ interface RouteParams {
 }
 
 export async function GET(req: NextRequest, { params }: RouteParams) {
-  // Auth disabled for preview
-  const discordId = "preview-admin"; // bypass, { status: 403 });
+  const session = await getServerSession(authOptions);
+  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!isAdmin((session.user as any)?.discordId)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   const { symbol: rawSymbol } = await params;
   const symbol = rawSymbol.toUpperCase();
@@ -41,8 +42,9 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
 }
 
 export async function PATCH(req: NextRequest, { params }: RouteParams) {
-  // Auth disabled for preview
-  const discordId = "preview-admin"; // bypass, { status: 403 });
+  const session = await getServerSession(authOptions);
+  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!isAdmin((session.user as any)?.discordId)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   const { symbol: rawSymbol } = await params;
   const symbol = rawSymbol.toUpperCase();

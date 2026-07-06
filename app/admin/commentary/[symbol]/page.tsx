@@ -60,9 +60,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function AdminCommentarySymbolPage() {
-  // Auth disabled for preview
-  const session: { user?: any } | null = null;
-  const status = 'authenticated'; // bypass
+  const { data: session, status } = useSession();
   const router = useRouter();
   const params = useParams();
   const symbol = (params?.symbol as string)?.toUpperCase() ?? '';
@@ -81,7 +79,9 @@ export default function AdminCommentarySymbolPage() {
   const userIsAdmin = discordId === adminId;
 
   useEffect(() => {
-    
+    if (status === 'unauthenticated') {
+      router.push('/login');
+    }
   }, [status, router]);
 
   const fetchData = useCallback(async () => {
@@ -104,7 +104,9 @@ export default function AdminCommentarySymbolPage() {
   }, [symbol, router]);
 
   useEffect(() => {
-    fetchData(); // Auth disabled
+    if (status === 'authenticated') {
+      fetchData();
+    }
   }, [status, fetchData]);
 
   const handleSave = async () => {
