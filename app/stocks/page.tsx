@@ -338,9 +338,11 @@ export default function StocksPage() {
                     style={{
                       borderBottom: '1px solid #EDEBE6',
                       padding: '10px 6px',
-                      cursor: 'pointer',
+                      cursor: navigating === rec.symbol ? 'wait' : 'pointer',
+                      background: navigating === rec.symbol ? '#F5E6D0' : undefined,
+                      opacity: navigating && navigating !== rec.symbol ? 0.5 : 1,
                     }}
-                    onClick={() => router.push(`/stocks/${rec.symbol}`)}
+                    onClick={() => { setNavigating(rec.symbol); router.push(`/stocks/${rec.symbol}`); }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                       <span
@@ -388,7 +390,19 @@ export default function StocksPage() {
                       >
                         {gain.label}
                       </span>
-                      <span style={{ color: '#BBB', fontSize: 13, marginLeft: 6 }}>→</span>
+                      <span style={{
+                          display: 'inline-block',
+                          background: navigating === rec.symbol ? '#C0392B' : '#E8E3DC',
+                          color: navigating === rec.symbol ? '#fff' : '#555',
+                          fontSize: 11,
+                          fontWeight: 600,
+                          padding: '3px 8px',
+                          borderRadius: 4,
+                          marginLeft: 6,
+                          whiteSpace: 'nowrap',
+                        }}>
+                          {navigating === rec.symbol ? '載入...' : '查看→'}
+                        </span>
                     </div>
                     <div
                       style={{
