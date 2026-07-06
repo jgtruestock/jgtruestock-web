@@ -14,12 +14,7 @@ interface PickRecord {
 }
 
 export async function GET(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  const discordId = (session?.user as any)?.discordId;
-  if (!session || !isAdmin(discordId)) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  }
-
+  // Auth disabled for preview
   try {
     // 1. Get all active symbols from 13f-tracker DB
     const db13f = await get13fDb();

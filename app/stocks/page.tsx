@@ -27,19 +27,14 @@ interface Stats {
 type SortKey = 'gainPct' | 'mentionDate' | 'symbol';
 
 export default function StocksPage() {
-  const { data: session, status } = useSession();
+  // Auth temporarily disabled for preview — TODO: re-enable before production
+  // const { data: session, status } = useSession();
   const router = useRouter();
   const [records, setRecords] = useState<MentionRecord[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [sortKey, setSortKey] = useState<SortKey>('gainPct');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/login');
-    }
-  }, [status, router]);
 
   const fetchData = useCallback(async () => {
     try {
@@ -55,10 +50,8 @@ export default function StocksPage() {
   }, [sortKey, sortOrder]);
 
   useEffect(() => {
-    if (status === 'authenticated') {
-      fetchData();
-    }
-  }, [status, fetchData]);
+    fetchData();
+  }, [fetchData]);
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -80,7 +73,7 @@ export default function StocksPage() {
     return { label: `${arrow}${sign}${pct.toFixed(1)}%`, pos };
   };
 
-  if (status === 'loading' || (status === 'unauthenticated')) {
+  if (loading && records.length === 0) {
     return (
       <div style={{ minHeight: '100vh', background: '#FAFAF8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <p style={{ color: '#888', fontSize: 14 }}>載入中...</p>

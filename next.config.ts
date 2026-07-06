@@ -4,6 +4,7 @@ const nextConfig: NextConfig = {
   images: {
     domains: ['cdn.discordapp.com', 'avatars.githubusercontent.com'],
   },
+  allowedDevOrigins: ['192.168.1.101'],
 };
 
 export default nextConfig;

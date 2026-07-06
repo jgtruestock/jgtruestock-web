@@ -340,10 +340,9 @@ function NewsFeed({ articles }: { articles: JGStockNewsArticle[] }) {
 // ─── Page ────────────────────────────────────────────────────────────────────
 
 export default async function StockDetailPage({ params }: StockPageProps) {
-  const session = await getServerSession(authOptions);
-  if (!session) {
-    redirect('/login');
-  }
+  // Auth temporarily disabled for preview — TODO: re-enable before production
+  // const session = await getServerSession(authOptions);
+  // if (!session) { redirect('/login'); }
 
   const { symbol } = await params;
   const upperSymbol = symbol.toUpperCase();

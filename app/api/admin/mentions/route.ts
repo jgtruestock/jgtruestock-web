@@ -5,13 +5,7 @@ import { getDb } from '@/lib/mongodb';
 import { getHistoricalPrice, getCompanyProfile } from '@/lib/fmp';
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  const discordId = (session?.user as any)?.discordId;
-
-  if (!session || !isAdmin(discordId)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+  // Auth disabled for preview
   try {
     const body = await req.json();
     const { symbol, mentionDate, source } = body;
@@ -73,13 +67,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  const discordId = (session?.user as any)?.discordId;
-
-  if (!session || !isAdmin(discordId)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+  // Auth disabled for preview
   const db = await getDb();
   const records = await db
     .collection('jg_mention_history')

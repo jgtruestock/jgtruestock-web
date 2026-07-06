@@ -9,11 +9,9 @@ export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ symbol: string }> }
 ) {
-  // Auth: members only
-  const session = await getServerSession(authOptions);
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  // Auth temporarily disabled for preview — TODO: re-enable before production
+  // const session = await getServerSession(authOptions);
+  // if (!session) { return NextResponse.json({ error: 'Unauthorized' }, { status: 401 }); }
 
   const { symbol } = await params;
   const upperSymbol = symbol.toUpperCase();

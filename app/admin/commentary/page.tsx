@@ -58,7 +58,9 @@ function StatusDot({ status }: { status: string | null }) {
 }
 
 export default function AdminCommentaryPage() {
-  const { data: session, status } = useSession();
+  // Auth disabled for preview
+  const session = null;
+  const status = 'authenticated'; // bypass
   const router = useRouter();
   const [records, setRecords] = useState<CommentaryRecord[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
@@ -73,7 +75,7 @@ export default function AdminCommentaryPage() {
   const userIsAdmin = discordId === adminId;
 
   useEffect(() => {
-    if (status === 'unauthenticated') router.push('/login');
+    
   }, [status, router]);
 
   const fetchData = useCallback(async () => {
@@ -94,7 +96,7 @@ export default function AdminCommentaryPage() {
   }, [router]);
 
   useEffect(() => {
-    if (status === 'authenticated') fetchData();
+    fetchData(); // Auth disabled
   }, [status, fetchData]);
 
   const filtered = records.filter((r) => {
@@ -128,7 +130,7 @@ export default function AdminCommentaryPage() {
     }
   };
 
-  if (status === 'loading' || loading) {
+  if (loading) {
     return (
       <div style={{ minHeight: '100vh', background: '#F5F3EE' }}>
         <Navbar />

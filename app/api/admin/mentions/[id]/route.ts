@@ -9,12 +9,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const session = await getServerSession(authOptions);
-  const discordId = (session?.user as any)?.discordId;
-
-  if (!session || !isAdmin(discordId)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  // Auth disabled for preview
 
   try {
     const db = await getDb();
