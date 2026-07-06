@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<style>
+  body { font-family: 'Arial', sans-serif; max-width: 900px; margin: 0 auto; padding: 40px; color: #222; line-height: 1.7; }
+  h1 { color: #C0392B; border-bottom: 3px solid #C0392B; padding-bottom: 10px; }
+  h2 { color: #1a1a1a; border-left: 5px solid #C0392B; padding-left: 12px; margin-top: 36px; }
+  h3 { color: #333; margin-top: 24px; }
+  .section { background: #f9f9f9; border-radius: 8px; padding: 20px; margin: 20px 0; }
+  .warning { background: #fff3cd; border-left: 4px solid #ffc107; padding: 12px 16px; border-radius: 4px; }
+  .good { background: #d4edda; border-left: 4px solid #28a745; padding: 12px 16px; border-radius: 4px; }
+  .code { background: #1e1e1e; color: #d4d4d4; padding: 12px 16px; border-radius: 6px; font-family: monospace; font-size: 13px; margin: 8px 0; }
+  .url { color: #0066cc; font-weight: bold; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+  th { background: #C0392B; color: white; padding: 10px 14px; text-align: left; }
+  td { padding: 8px 14px; border-bottom: 1px solid #ddd; }
+  tr:nth-child(even) { background: #f5f5f5; }
+  .status-ok { color: #28a745; font-weight: bold; }
+  .status-warn { color: #ffc107; font-weight: bold; }
+  .status-bad { color: #C0392B; font-weight: bold; }
+  .page-break { page-break-before: always; }
+</style>
+</head>
+<body>
+
+<h1>🏹 JGTrueStock 網站功能全覽</h1>
+<p style="color:#666">版本定稿文件 ｜ 2026-07-07 ｜ 技術負責：JGClaw</p>
+
+<hr>
+
+<h2>📋 一、網站是什麼</h2>
+<div class="section">
+<p><strong>JGTrueStock</strong> 是一個給 JG 會員使用的投資追蹤平台，有兩個部分：</p>
+<ul>
+  <li><strong>前台</strong>（會員看）：JG 提過的股票記錄 + 每支股票的法說會比對分析 + 近期新聞</li>
+  <li><strong>後台</strong>（JG 管）：新增/刪除提股、管理法說會點評、追蹤大神頻道內容</li>
+</ul>
+<p>網站網址：<span class="url">jgtruestock-web.vercel.app</span></p>
+</div>
+
+<h2>🖥️ 二、前台功能（會員端）</h2>
+
+<h3>2.1 提股記錄列表 <span class="url">/stocks</span></h3>
+<div class="section">
+<p>JG 在會員頻道提過的每一支股票，自動追蹤從提到日至今的漲跌幅。</p>
+<table>
+  <tr><th>欄位</th><th>說明</th><th>狀態</th></tr>
+  <tr><td>代號 + 公司名</td><td>股票代號（NVDA）+ 完整英文公司名</td><td class="status-ok">✅ 正常</td></tr>
+  <tr><td>提到日期</td><td>JG 在會員頻道首次提到的日期</td><td class="status-ok">✅ 正常</td></tr>
+  <tr><td>當時股價</td><td>JG 提到當天的收盤價</td><td class="status-ok">✅ 正常</td></tr>
+  <tr><td>今日股價</td><td>每日自動更新（早上 05:30）</td><td class="status-ok">✅ 正常</td></tr>
+  <tr><td>漲幅 %</td><td>（今日股價 − 當時股價）/ 當時股價</td><td class="status-ok">✅ 正常</td></tr>
+  <tr><td>排序</td><td>按漲幅、最新日期、字母 A-Z 排序</td><td class="status-ok">✅ 正常</td></tr>
+  <tr><td>最後更新</td><td>頁面顯示資料最後更新日期</td><td class="status-ok">✅ 正常</td></tr>
+</table>
+<p>目前有 <strong>63 支股票</strong>，從 2024 年至今。</p>
+<div class="warning">⚠️ 目前沒有登入保護，任何人都能看到前台。正式上線前需要開啟 Discord 會員登入。</div>
+</div>
+
+<h3>2.2 個股詳情頁 <span class="url">/stocks/[代號]</span></h3>
+<div class="section">
+<p>點擊任一支股票後進入的詳情頁，有兩個區塊：</p>
+
+<h4>① JG 點評（法說會比對）</h4>
+<p>由 AI 自動生成，格式為三段式比對：</p>
+<div class="code">
+【法說會方向】
+最新一季法說會，管理層說了什麼（財務結果、資本支出、產品計畫、指引）
+
+【最近官方動態】
+根據最近 30 天新聞，找出與法說會方向相關的具體發展，引用新聞標題和日期
+
+【比對結論】
+對得上：法說會哪些方向，新聞顯示正在往對的方向
+尚待觀察：哪些方向尚未從新聞確認
+</div>
+<div class="warning">⚠️ 點評必須先在後台「發布」才會出現。草稿狀態不顯示。</div>
+
+<h4>② 近 30 天新聞</h4>
+<p>每日自動抓取最新 30-50 篇相關新聞，可直接點擊連結閱讀原文。</p>
+<div class="good">✅ 63 支股票全部有新聞資料，每日自動更新（早上 07:00）</div>
+</div>
+
+<div class="page-break"></div>
+
+<h2>⚙️ 三、後台功能（JG 管理端）</h2>
+<p>後台入口：<span class="url">jgtruestock-web.vercel.app/admin</span></p>
+<div class="warning">⚠️ 後台目前沒有登入保護！任何人都可以進入後台操作。正式上線前必須開啟 Discord 管理員驗證。</div>
+
+<h3>3.1 提股管理 <span class="url">/admin/mentions</span></h3>
+<div class="section">
+<table>
+  <tr><th>功能</th><th>如何操作</th><th>狀態</th></tr>
+  <tr><td>新增提股記錄</td><td>輸入代號（有自動搜尋補全）+ 選日期 → 點「新增」</td><td class="status-ok">✅ 正常</td></tr>
+  <tr><td>自動抓收盤價</td><td>新增時系統自動從 FMP API 抓取當天收盤價</td><td class="status-ok">✅ 正常</td></tr>
+  <tr><td>刪除記錄</td><td>列表中每筆右邊有「刪除」按鈕</td><td class="status-ok">✅ 正常</td></tr>
+  <tr><td>即時出現前台</td><td>新增後，前台 /stocks 立刻顯示</td><td class="status-ok">✅ 正常</td></tr>
+</table>
+</div>
+
+<h3>3.2 法說會點評管理 <span class="url">/admin/commentary</span></h3>
+<div class="section">
+<p>這是後台最重要的功能。63 支股票各自有一個 AI 生成的法說會比對分析。</p>
+<table>
+  <tr><th>功能</th><th>如何操作</th><th>狀態</th></tr>
+  <tr><td>生成草稿</td><td>點「🤖 生成草稿」→ AI 自動分析法說會 + 比對近期新聞</td><td class="status-ok">✅ 正常（非同步，< 1秒回應）</td></tr>
+  <tr><td>編輯草稿</td><td>點「✏️ 編輯」→ 可修改 AI 寫的內容</td><td class="status-ok">✅ 正常</td></tr>
+  <tr><td>發布點評</td><td>審核後點「發布」→ 前台 /stocks/NVDA 就看得到</td><td class="status-ok">✅ 正常</td></tr>
+  <tr><td>篩選狀態</td><td>全部 / 草稿 / 已發布 / 待更新 / 無點評</td><td class="status-ok">✅ 正常</td></tr>
+  <tr><td>搜尋</td><td>右上角可搜尋股票代號或公司名</td><td class="status-ok">✅ 正常</td></tr>
+  <tr><td>查看法說會逐字稿</td><td>每支股票有原始法說會英文逐字稿可查</td><td class="status-ok">✅ 正常</td></tr>
+</table>
+
+<h4>法說會 AI 分析邏輯（內部技術說明）</h4>
+<p>AI 生成點評分三個步驟：</p>
+<ol>
+  <li><strong>抓資料</strong>：從 FMP API 取最新法說會逐字稿 + 最新 30 篇新聞</li>
+  <li><strong>生成主體</strong>：Claude Sonnet 根據三段式格式生成法說會方向 / 官方動態 / 比對結論</li>
+  <li><strong>結構化要點</strong>：同時提取 7 類要點（revenue、margin、capex、product、headcount、guidance、market_expansion），每個要點附上 AI 判斷的狀態（fulfilled / partially / broken / pending / unclear）</li>
+</ol>
+
+<div class="good">✅ 63 支股票目前全部已自動生成草稿並發布（2026-07-07 批次完成）</div>
+</div>
+
+<h3>3.3 大神追蹤 <span class="url">/admin/gurus</span></h3>
+<div class="section">
+<p>自動追蹤 17 個 JG 關注的財經/科技大神的最新內容。</p>
+<table>
+  <tr><th>平台</th><th>頻道</th><th>內容類型</th><th>狀態</th></tr>
+  <tr><td>YouTube</td><td>YC Root Access、Asianometry</td><td>影片摘要</td><td class="status-ok">✅ 7 支</td></tr>
+  <tr><td>Podcast</td><td>Acquired、All-In、Lenny's、Hard Fork、Bg2Pod、20VC、Latent Space</td><td>影片摘要（YouTube 上傳版）</td><td class="status-warn">⚠️ 31 支（11 支逐字稿補跑中）</td></tr>
+  <tr><td>X</td><td>Serenity（白毛股神）+ 其他 3 位</td><td>推文</td><td class="status-ok">✅ 80 則</td></tr>
+  <tr><td>法說會</td><td>63 支持倉股</td><td>法說會 AI 點評</td><td class="status-ok">✅ 全部</td></tr>
+</table>
+
+<h4>JG 可以做的事</h4>
+<ul>
+  <li><strong>展開摘要</strong>：點擊卡片 → 看 AI 中文摘要（300-500字）</li>
+  <li><strong>展開原文</strong>：點「展開原文」→ 看深度中文摘要（1500-3000字，正在補齊）</li>
+  <li><strong>按平台篩選</strong>：全部 / YouTube / Podcast / X / 法說會</li>
+  <li><strong>按日期篩選</strong>：只看某日期之後的內容</li>
+  <li><strong>立刻更新全部</strong>：手動觸發抓取最新內容</li>
+</ul>
+<div class="warning">⚠️ 11 支 Podcast 影片的逐字稿正在用 Whisper 重新補跑（預計今晚完成）</div>
+</div>
+
+<div class="page-break"></div>
+
+<h2>🔄 四、自動更新排程</h2>
+<div class="section">
+<table>
+  <tr><th>項目</th><th>台灣時間</th><th>說明</th></tr>
+  <tr><td>股票現價</td><td>每天 05:30</td><td>從 FMP API 抓美股收盤價（美股 4pm ET = 台灣凌晨 4am，等 1.5 小時）</td></tr>
+  <tr><td>股票新聞</td><td>每天 07:00</td><td>抓 63 支股票最新 50 篇新聞</td></tr>
+  <tr><td>大神追蹤</td><td>每天 09:00</td><td>抓 17 個頻道最新 YouTube / X 內容，生成中文摘要</td></tr>
+  <tr><td>法說會檢查</td><td>每週一 11:00</td><td>檢查是否有新的法說會逐字稿（季度性）</td></tr>
+</table>
+<p>這些都是自動的，JG 不需要操作任何事。</p>
+</div>
+
+<h2>🗄️ 五、資料庫結構（技術說明）</h2>
+<div class="section">
+<p>使用 MongoDB Atlas（雲端資料庫），有兩個 DB：</p>
+<table>
+  <tr><th>資料庫</th><th>Collection</th><th>存什麼</th></tr>
+  <tr><td>13f-tracker</td><td>jg_picks_cache</td><td>63 支股票的主要資料（代號、提到日期、股價、漲幅）</td></tr>
+  <tr><td>13f-tracker</td><td>jg_picks_manual</td><td>手動新增的提股記錄（3 筆，舊版）</td></tr>
+  <tr><td>jgtruestock</td><td>jg_mention_history</td><td>後台 /admin/mentions 新增的提股記錄</td></tr>
+  <tr><td>jgtruestock</td><td>jg_commentary</td><td>63 支股票的 AI 法說會點評（草稿 + 發布版）</td></tr>
+  <tr><td>jgtruestock</td><td>jg_stock_news</td><td>63 支股票的新聞快取（每支最多 50 篇）</td></tr>
+  <tr><td>jgtruestock</td><td>guru_channels</td><td>17 個大神頻道設定</td></tr>
+  <tr><td>jgtruestock</td><td>guru_content</td><td>大神頻道的影片/推文內容（118 筆）</td></tr>
+  <tr><td>jgtruestock</td><td>jg_generation_jobs</td><td>AI 生成任務佇列（async queue）</td></tr>
+  <tr><td>jgtruestock</td><td>jg_transcripts</td><td>法說會逐字稿快取（7天更新一次）</td></tr>
+</table>
+</div>
+
+<h2>⚠️ 六、目前待解決的問題（重要順序）</h2>
+<div class="section">
+<table>
+  <tr><th>優先</th><th>問題</th><th>影響</th></tr>
+  <tr><td class="status-bad">🔴 緊急</td><td>沒有會員登入保護</td><td>任何人都能看前台內容，後台也沒保護</td></tr>
+  <tr><td class="status-bad">🔴 緊急</td><td>後台沒有管理員驗證</td><td>任何人都可以亂改資料</td></tr>
+  <tr><td class="status-warn">🟡 待做</td><td>11 支 Podcast 逐字稿補跑</td><td>這些影片「展開原文」暫時沒內容</td></tr>
+  <tr><td class="status-warn">🟡 待做</td><td>「每日分享」頁面不存在</td><td>導覽列點了跳回提股記錄</td></tr>
+  <tr><td style="color:#888">🟢 未來</td><td>法說會點評自動定期更新</td><td>目前是手動觸發或一次性批次</td></tr>
+</table>
+</div>
+
+<h2>🛠️ 七、技術架構（給接手的工程師看）</h2>
+<div class="section">
+<table>
+  <tr><th>層級</th><th>技術</th><th>說明</th></tr>
+  <tr><td>前端框架</td><td>Next.js 14+ (App Router)</td><td>TypeScript，部署在 Vercel</td></tr>
+  <tr><td>資料庫</td><td>MongoDB Atlas</td><td>cluster0.lh6rsp1.mongodb.net</td></tr>
+  <tr><td>AI 生成</td><td>Anthropic Claude Sonnet / Haiku</td><td>法說會點評、大神內容摘要</td></tr>
+  <tr><td>股票資料</td><td>FMP API (Financial Modeling Prep)</td><td>股價、法說會逐字稿、新聞</td></tr>
+  <tr><td>登入</td><td>NextAuth + Discord OAuth</td><td>⚠️ 目前關閉，等正式上線再開</td></tr>
+  <tr><td>部署</td><td>Vercel</td><td>jgtruestock-web.vercel.app（需手動觸發部署）</td></tr>
+  <tr><td>逐字稿</td><td>yt-dlp + OpenAI Whisper</td><td>本地 Mac 執行，用 Chrome cookies 繞過限制</td></tr>
+  <tr><td>排程</td><td>Vercel Cron Jobs</td><td>vercel.json 設定</td></tr>
+</table>
+
+<h4>重要技術決定</h4>
+<ul>
+  <li>Vercel 部署不是自動觸發（需要透過 Vercel API 手動觸發），因為 GitHub 帳號連結問題</li>
+  <li>AI 法說會生成改成非同步（Async Job Queue）：後台按按鈕 → 馬上回應 → Mac 本地 worker 執行 → 完成自動刷新</li>
+  <li>股票詳情頁有 ISR 快取（1小時），支援幾千名同時用戶</li>
+  <li>API 回應快取 5 分鐘（Vercel CDN Edge Cache）</li>
+</ul>
+</div>
+
+<h2>📂 八、程式碼結構</h2>
+<div class="section">
+<div class="code">
+jgtruestock-web/
+├── app/
+│   ├── page.tsx              → 首頁（自動跳轉 /stocks）
+│   ├── login/                → Discord 登入頁
+│   ├── stocks/
+│   │   ├── page.tsx          → 提股記錄列表
+│   │   └── [symbol]/
+│   │       └── page.tsx      → 個股詳情（點評 + 新聞）
+│   ├── admin/
+│   │   ├── page.tsx          → 後台入口
+│   │   ├── layout.tsx        → 後台共用導覽列
+│   │   ├── mentions/         → 提股管理
+│   │   ├── commentary/       → 法說會點評管理
+│   │   └── gurus/            → 大神追蹤
+│   └── api/
+│       ├── mentions/         → 提股記錄 API
+│       ├── admin/            → 後台所有 API
+│       └── cron/             → 自動更新 cron jobs
+├── lib/
+│   ├── ai/
+│   │   └── generateCommentary.ts  → 三段式法說會比對 AI 邏輯
+│   ├── db/                   → 資料庫存取函式
+│   └── fmp.ts                → FMP API（股價、法說會、新聞）
+├── scripts/
+│   ├── batch_generate_commentary.py  → 批次生成全部點評
+│   ├── commentary_worker.py          → UI 非同步生成 daemon
+│   └── verify.mjs                   → Loop Engineering 驗收腳本
+├── SPEC-GURU-TRACKER.md      → 大神追蹤功能規格
+└── SPEC-PROMISE-TRACKER.md   → 管理層承諾追蹤規格（未實作）
+</div>
+</div>
+
+<hr>
+<p style="text-align:center; color:#999; font-size:13px">JGTrueStock 技術文件 ｜ 2026-07-07 ｜ 由 JGClaw 生成</p>
+
+</body>
+</html>
