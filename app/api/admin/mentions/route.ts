@@ -1,15 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions, isAdmin } from '@/lib/auth';
+import { authOptions, isAdmin, ADMIN_DISCORD_ID } from '@/lib/auth';
+
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'jgdady@gmail.com';
+function isAdminSession(session: any): boolean {
+  const discordId = session?.user?.discordId;
+  const email = session?.user?.email;
+  return isAdmin(discordId) || email === ADMIN_EMAIL;
+}
 import { getDb } from '@/lib/mongodb';
 import { getHistoricalPrice, getCompanyProfile, getCurrentPrice } from '@/lib/fmp';
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  const userDiscordId = (session.user as any)?.discordId;
-  const userEmail = (session.user as any)?.email;
-  if (!isAdmin(userDiscordId) && !isAdmin(userEmail)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  if (!isAdminSession(session)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   try {
     const body = await req.json();
@@ -76,7 +81,7 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  if (!isAdmin((session.user as any)?.discordId)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  if (!isAdminSession(session)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   const db = await getDb();
   const records = await db
