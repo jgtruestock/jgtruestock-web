@@ -16,13 +16,23 @@ export async function GET(req: NextRequest) {
       db.collection('jg_picks_manual').find({ active: true }).toArray(),
     ]);
 
-    // 以 symbol 為 key 建立 map，manual 覆蓋 cache
+    // 以 symbol 為 key 建立 map
+    // manual 覆蓋 cache 的 metadata，但 price 欄位以 cache（每日更新）為準
     const symbolMap: Record<string, Record<string, unknown>> = {};
     for (const item of cache) {
       symbolMap[item.symbol] = item;
     }
     for (const item of manual) {
-      symbolMap[item.symbol] = { ...symbolMap[item.symbol], ...item, isManualPick: true };
+      const cached = symbolMap[item.symbol] || {};
+      symbolMap[item.symbol] = {
+        ...cached,
+        ...item,
+        // 保留 cache 的最新股價（每日 cron 更新），不讓 manual 的舊價格蓋掉
+        latestClose: (cached.latestClose as number) ?? (item.latestClose as number),
+        latestCloseDate: (cached.latestCloseDate as string) ?? (item.latestCloseDate as string),
+        performancePct: (cached.performancePct as number) ?? (item.performancePct as number),
+        isManualPick: true,
+      };
     }
 
     // 合併 jgtruestock DB 的 jg_mention_history
