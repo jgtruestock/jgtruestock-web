@@ -32,12 +32,14 @@ export async function getHistoricalPrice(
   date: string
 ): Promise<number | null> {
   const res = await fetch(
-    `${BASE_URL}/historical-price-eod?symbol=${symbol}&from=${date}&to=${date}&apikey=${FMP_API_KEY}`
+    `${BASE_URL}/historical-price-eod/full?symbol=${symbol}&from=${date}&to=${date}&apikey=${FMP_API_KEY}`
   );
   if (!res.ok) return null;
   const data = await res.json();
   if (Array.isArray(data) && data.length > 0) {
-    return data[0].close ?? null;
+    // 找最接近指定日期的交易日（可能剛好是節假日，取最近一筆）
+    const sorted = data.sort((a: any, b: any) => a.date.localeCompare(b.date));
+    return sorted[sorted.length - 1]?.close ?? null;
   }
   return null;
 }

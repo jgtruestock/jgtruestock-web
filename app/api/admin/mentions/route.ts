@@ -2,12 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions, isAdmin } from '@/lib/auth';
 import { getDb } from '@/lib/mongodb';
-import { getHistoricalPrice, getCompanyProfile } from '@/lib/fmp';
+import { getHistoricalPrice, getCompanyProfile, getCurrentPrice } from '@/lib/fmp';
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  if (!isAdmin((session.user as any)?.discordId)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  const userDiscordId = (session.user as any)?.discordId;
+  const userEmail = (session.user as any)?.email;
+  if (!isAdmin(userDiscordId) && !isAdmin(userEmail)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   try {
     const body = await req.json();
@@ -36,9 +38,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // For currentPrice, use same as entry for now (cron will update)
-    const currentPrice = priceAtMention;
-    const gainPct = 0;
+    // 立即抓當前股價，計算漲幅
+    const currentPrice = (await getCurrentPrice(upperSymbol)) ?? priceAtMention;
+    const gainPct = priceAtMention > 0
+      ? parseFloat(((currentPrice - priceAtMention) / priceAtMention * 100).toFixed(2))
+      : 0;
 
     const db = await getDb();
     const now = new Date();
