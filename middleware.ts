@@ -2,6 +2,19 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 
 const ADMIN_DISCORD_ID = process.env.ADMIN_DISCORD_ID || '';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'jgdady@gmail.com';
+
+function isAdmin(token: any): boolean {
+  if (!token) return false;
+  // Discord login
+  if (token.provider === 'discord' && token.sub === ADMIN_DISCORD_ID) return true;
+  // Google login with admin email
+  if (token.provider === 'google' && token.email === ADMIN_EMAIL) return true;
+  return false;
+}
+
+// Front-end member-only paths
+const MEMBER_PATHS = ['/stocks'];
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
@@ -14,13 +27,8 @@ export async function middleware(req: NextRequest) {
   // /api/admin/** — return JSON errors
   if (pathname.startsWith('/api/admin/')) {
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    const discordId = token.sub as string | undefined;
-    if (!discordId || !ADMIN_DISCORD_ID || discordId !== ADMIN_DISCORD_ID) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
+    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!isAdmin(token)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     return NextResponse.next();
   }
 
@@ -28,14 +36,31 @@ export async function middleware(req: NextRequest) {
   if (pathname.startsWith('/admin/') || pathname === '/admin') {
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
     if (!token) {
-      const loginUrl = new URL('/login', req.url);
+      const loginUrl = new URL('/login/admin', req.url);
       loginUrl.searchParams.set('callbackUrl', req.url);
       return NextResponse.redirect(loginUrl);
     }
-    const discordId = token.sub as string | undefined;
-    if (!discordId || !ADMIN_DISCORD_ID || discordId !== ADMIN_DISCORD_ID) {
-      return NextResponse.redirect(new URL('/', req.url));
+    if (!isAdmin(token)) return NextResponse.redirect(new URL('/', req.url));
+    return NextResponse.next();
+  }
+
+  // Member-only front-end paths
+  if (MEMBER_PATHS.some((p) => pathname.startsWith(p))) {
+    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    if (!token) {
+      return NextResponse.redirect(new URL('/login', req.url));
     }
+
+    // Admin → always allow (Discord or Google admin email)
+    if (isAdmin(token)) return NextResponse.next();
+
+    // Google user → must be YT member; if not yet verified, go to register-channel
+    if (!token.isYTMember) {
+      return NextResponse.redirect(
+        new URL('/register-channel', req.url)
+      );
+    }
+
     return NextResponse.next();
   }
 
@@ -43,5 +68,11 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/api/admin/:path*', '/admin/:path*', '/admin'],
+  matcher: [
+    '/api/admin/:path*',
+    '/admin/:path*',
+    '/admin',
+    '/stocks/:path*',
+    '/stocks',
+  ],
 };
