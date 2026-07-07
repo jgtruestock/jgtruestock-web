@@ -8,7 +8,7 @@ function isAdminSession(session: any): boolean {
   const email = session?.user?.email;
   return isAdmin(discordId) || email === ADMIN_EMAIL;
 }
-import { getDb } from '@/lib/mongodb';
+import { getJgtDb } from '@/lib/mongodb';
 import { getHistoricalPrice, getCompanyProfile, getCurrentPrice } from '@/lib/fmp';
 
 export async function POST(req: NextRequest) {
@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
       ? parseFloat(((currentPrice - priceAtMention) / priceAtMention * 100).toFixed(2))
       : 0;
 
-    const db = await getDb();
+    const db = await getJgtDb();
     const now = new Date();
 
     const doc = {
@@ -83,7 +83,7 @@ export async function GET(req: NextRequest) {
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (!isAdminSession(session)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-  const db = await getDb();
+  const db = await getJgtDb();
   const records = await db
     .collection('jg_mention_history')
     .find({})
