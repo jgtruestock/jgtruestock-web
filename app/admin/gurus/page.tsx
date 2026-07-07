@@ -72,8 +72,8 @@ function TimelineCard({ item }: { item: TimelineItem }) {
   return (
     <div
       style={{
-        background: '#151515',
-        border: '1px solid #2a2a2a',
+        background: '#FFF',
+        border: '1px solid #E8E4DC',
         borderRadius: 12,
         padding: '16px 20px',
         marginBottom: 12,
@@ -109,16 +109,16 @@ function TimelineCard({ item }: { item: TimelineItem }) {
               >
                 {cfg.icon} {cfg.label}
               </span>
-              <span style={{ color: '#888', fontSize: 12, whiteSpace: 'nowrap' }}>
+              <span style={{ color: '#666', fontSize: 12, whiteSpace: 'nowrap' }}>
                 {item.sourceName}
               </span>
-              <span style={{ color: '#555', fontSize: 11, marginLeft: 'auto', whiteSpace: 'nowrap' }}>
+              <span style={{ color: '#999', fontSize: 11, marginLeft: 'auto', whiteSpace: 'nowrap' }}>
                 {formatDate(item.publishedAt)}
               </span>
             </div>
 
             {/* Title */}
-            <div style={{ fontSize: 14, fontWeight: 600, color: '#e8e8e8', lineHeight: 1.4 }}>
+            <div style={{ fontSize: 14, fontWeight: 600, color: '#1A1A1A', lineHeight: 1.4 }}>
               {item.title}
             </div>
 
@@ -129,12 +129,13 @@ function TimelineCard({ item }: { item: TimelineItem }) {
                   <span
                     key={t}
                     style={{
-                      background: '#1a2a1a',
-                      color: '#4caf50',
+                      background: '#F0FAF0',
+                      color: '#1A7340',
                       borderRadius: 4,
                       padding: '1px 6px',
                       fontSize: 11,
                       fontFamily: 'monospace',
+                      border: '1px solid #C6E8D0',
                     }}
                   >
                     ${t}
@@ -151,10 +152,10 @@ function TimelineCard({ item }: { item: TimelineItem }) {
         <button
           onClick={() => setExpanded((e) => !e)}
           style={{
-            background: 'transparent',
-            border: '1px solid #333',
+            background: '#F5F3EE',
+            border: '1px solid #E0DCD6',
             borderRadius: 6,
-            color: '#aaa',
+            color: '#555',
             padding: '3px 10px',
             fontSize: 12,
             cursor: 'pointer',
@@ -168,10 +169,10 @@ function TimelineCard({ item }: { item: TimelineItem }) {
             onClick={handleExpandRaw}
             disabled={rawLoading}
             style={{
-              background: rawExpanded ? '#1a2a3a' : 'transparent',
-              border: '1px solid #2a4a6a',
+              background: rawExpanded ? '#EDF4FB' : '#F5F3EE',
+              border: '1px solid #B8D8F0',
               borderRadius: 6,
-              color: rawLoading ? '#555' : '#6aaddf',
+              color: rawLoading ? '#aaa' : '#2980B9',
               padding: '3px 10px',
               fontSize: 12,
               cursor: rawLoading ? 'not-allowed' : 'pointer',
@@ -188,10 +189,10 @@ function TimelineCard({ item }: { item: TimelineItem }) {
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
             style={{
-              background: 'transparent',
-              border: '1px solid #333',
+              background: '#F5F3EE',
+              border: '1px solid #E0DCD6',
               borderRadius: 6,
-              color: '#888',
+              color: '#666',
               padding: '3px 10px',
               fontSize: 12,
               textDecoration: 'none',
@@ -208,10 +209,10 @@ function TimelineCard({ item }: { item: TimelineItem }) {
           rel="noopener noreferrer"
           onClick={(e) => e.stopPropagation()}
           style={{
-            background: 'transparent',
-            border: '1px solid #2a4a2a',
+            background: '#F0FAF0',
+            border: '1px solid #C6E8D0',
             borderRadius: 6,
-            color: '#4caf50',
+            color: '#1A7340',
             padding: '3px 10px',
             fontSize: 12,
             textDecoration: 'none',
@@ -228,8 +229,8 @@ function TimelineCard({ item }: { item: TimelineItem }) {
           style={{
             marginTop: 14,
             paddingTop: 14,
-            borderTop: '1px solid #2a2a2a',
-            color: '#ccc',
+            borderTop: '1px solid #E8E4DC',
+            color: '#333',
             fontSize: 13,
             lineHeight: 1.8,
             whiteSpace: 'pre-wrap',
@@ -245,19 +246,19 @@ function TimelineCard({ item }: { item: TimelineItem }) {
           style={{
             marginTop: 14,
             paddingTop: 14,
-            borderTop: '1px solid #2a3a4a',
+            borderTop: '1px solid #D0E8F5',
           }}
         >
-          <div style={{ color: '#6aaddf', fontSize: 11, marginBottom: 8, fontWeight: 600 }}>
+          <div style={{ color: '#2980B9', fontSize: 11, marginBottom: 8, fontWeight: 600 }}>
             📄 完整原文
           </div>
           <div
             style={{
-              background: '#0d1a24',
-              border: '1px solid #1e3a50',
+              background: '#F8FAFB',
+              border: '1px solid #D0E8F5',
               borderRadius: 8,
               padding: '12px 14px',
-              color: '#b0c8d8',
+              color: '#333',
               fontSize: 12,
               lineHeight: 1.7,
               whiteSpace: 'pre-wrap',
@@ -310,24 +311,36 @@ export default function GurusPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0a0a0a', color: '#e8e8e8' }}>
+    <div style={{ minHeight: '100vh', background: '#F5F3EE', color: '#1A1A1A' }}>
       <Navbar />
       <main style={{ maxWidth: 900, margin: '0 auto', padding: '32px 20px' }}>
 
         {/* Header */}
-        <div style={{ marginBottom: 12 }}>
+        <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
           <a
             href="/admin/gurus/channels"
-            style={{ fontSize: 13, color: '#888', textDecoration: 'none', border: '1px solid #2a2a2a', borderRadius: 6, padding: '4px 12px' }}
+            style={{
+              fontSize: 13,
+              fontWeight: 600,
+              color: '#FFF',
+              textDecoration: 'none',
+              background: '#1A1A1A',
+              border: 'none',
+              borderRadius: 7,
+              padding: '7px 16px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+            }}
           >
-            ⚙️ 頻道管理
+            ⚙️ 頻道管理（新增 / 刪除大神）
           </a>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
-          <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>
+          <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0, color: '#1A1A1A' }}>
             🧠 大神追蹤 · 統一時間軸
             {items.length > 0 && (
-              <span style={{ fontSize: 12, color: '#888', fontWeight: 400, marginLeft: 12 }}>
+              <span style={{ fontSize: 12, color: '#888', fontWeight: 400, marginLeft: 12, color: '#999' }}>
                 上次更新：{items[0].publishedAt.slice(0, 10)}
               </span>
             )}
@@ -354,13 +367,13 @@ export default function GurusPage() {
         {fetchResult && (
           <div
             style={{
-              background: fetchResult.error ? '#2a1010' : '#0d2010',
-              border: `1px solid ${fetchResult.error ? '#ff4444' : '#1a7340'}`,
+              background: fetchResult.error ? '#FEF2F2' : '#F0FDF4',
+              border: `1px solid ${fetchResult.error ? '#FECACA' : '#BBF7D0'}`,
               borderRadius: 8,
               padding: '10px 14px',
               marginBottom: 16,
               fontSize: 12,
-              color: fetchResult.error ? '#ff8888' : '#6fcf97',
+              color: fetchResult.error ? '#C0392B' : '#1A7340',
             }}
           >
             {fetchResult.error
@@ -371,16 +384,16 @@ export default function GurusPage() {
 
         {/* Date filter */}
         <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
-          <label style={{ fontSize: 13, color: '#888' }}>📅 日期篩選（顯示此日期之後）：</label>
+          <label style={{ fontSize: 13, color: '#666' }}>📅 日期篩選（顯示此日期之後）：</label>
           <input
             type="date"
             value={dateFilter}
             onChange={(e) => setDateFilter(e.target.value)}
             style={{
-              background: '#1a1a1a',
-              border: '1px solid #333',
+              background: '#FFF',
+              border: '1px solid #D5D0C8',
               borderRadius: 6,
-              color: '#e8e8e8',
+              color: '#1A1A1A',
               padding: '5px 10px',
               fontSize: 13,
             }}
@@ -389,10 +402,10 @@ export default function GurusPage() {
             <button
               onClick={() => setDateFilter('')}
               style={{
-                background: 'transparent',
-                border: '1px solid #444',
+                background: '#FFF',
+                border: '1px solid #D5D0C8',
                 borderRadius: 6,
-                color: '#888',
+                color: '#666',
                 padding: '4px 10px',
                 fontSize: 12,
                 cursor: 'pointer',
@@ -404,7 +417,7 @@ export default function GurusPage() {
         </div>
 
         {/* 功能說明：展開原文 / expand full content */}
-        <div style={{ fontSize: 12, color: '#555', marginBottom: 12 }}>
+        <div style={{ fontSize: 12, color: '#888', marginBottom: 12 }}>
           💡 點擊卡片可展開摘要，點擊「展開原文」可查看完整內容
         </div>
 
@@ -415,9 +428,9 @@ export default function GurusPage() {
               key={f.key}
               onClick={() => setFilter(f.key)}
               style={{
-                background: filter === f.key ? '#1A7340' : '#1a1a1a',
-                color: filter === f.key ? '#fff' : '#aaa',
-                border: `1px solid ${filter === f.key ? '#1A7340' : '#333'}`,
+                background: filter === f.key ? '#1A1A1A' : '#E8E4DC',
+                color: filter === f.key ? '#fff' : '#555',
+                border: `1px solid ${filter === f.key ? '#1A1A1A' : '#D5D0C8'}`,
                 borderRadius: 20,
                 padding: '6px 14px',
                 cursor: 'pointer',
@@ -433,9 +446,9 @@ export default function GurusPage() {
 
         {/* Timeline */}
         {loading ? (
-          <div style={{ color: '#666', textAlign: 'center', padding: 60 }}>載入中...</div>
+          <div style={{ color: '#999', textAlign: 'center', padding: 60 }}>載入中...</div>
         ) : items.length === 0 ? (
-          <div style={{ color: '#555', textAlign: 'center', padding: 60 }}>
+          <div style={{ color: '#888', textAlign: 'center', padding: 60 }}>
             暫無資料。點擊「立刻更新全部」抓取最新內容。
           </div>
         ) : (() => {
@@ -444,7 +457,7 @@ export default function GurusPage() {
             : items;
           return (
             <>
-              <div style={{ color: '#666', fontSize: 12, marginBottom: 12 }}>
+              <div style={{ color: '#888', fontSize: 12, marginBottom: 12 }}>
                 共 {filtered.length} 則
                 {dateFilter && ` (${dateFilter} 之後)`}
                 · 點擊「展開摘要」查看 AI 摘要，「展開原文」查看完整原文
