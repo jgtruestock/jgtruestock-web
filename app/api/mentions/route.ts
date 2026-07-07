@@ -27,7 +27,10 @@ export async function GET(req: NextRequest) {
       symbolMap[item.symbol] = {
         ...cached,
         ...item,
-        // 保留 cache 的最新股價（每日 cron 更新），不讓 manual 的舊價格蓋掉
+        // 所有 price 欄位以 cache（每日 cron 更新，split-adjusted）為準
+        // manual 只存加入當下的快照，可能有 stock split 造成的舊資料問題
+        mentionClose: (cached.mentionClose as number) ?? (item.mentionClose as number),
+        mentionCloseDate: (cached.mentionCloseDate as string) ?? (item.mentionCloseDate as string),
         latestClose: (cached.latestClose as number) ?? (item.latestClose as number),
         latestCloseDate: (cached.latestCloseDate as string) ?? (item.latestCloseDate as string),
         performancePct: (cached.performancePct as number) ?? (item.performancePct as number),
