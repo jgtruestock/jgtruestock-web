@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb } from '@/lib/mongodb';
+import { getJgtDb } from '@/lib/mongodb';
 import { getCurrentPrice } from '@/lib/fmp';
 
 export async function GET(req: NextRequest) {
@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const db = await getDb();
+    const db = await getJgtDb();
     const collection = db.collection('jg_mention_history');
     const records = await collection.find({}).toArray();
 

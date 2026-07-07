@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions, isAdmin } from '@/lib/auth';
-import { getDb } from '@/lib/mongodb';
+import { getJgtDb } from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 
 export async function DELETE(
@@ -14,7 +14,7 @@ export async function DELETE(
   if (!isAdmin((session.user as any)?.discordId)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   try {
-    const db = await getDb();
+    const db = await getJgtDb();
     const result = await db
       .collection('jg_mention_history')
       .deleteOne({ _id: new ObjectId(id) });
