@@ -41,10 +41,6 @@ export default function Navbar() {
       <div style={{ display: 'flex', gap: 28, alignItems: 'center' }}>
         <NavLink href="/">每日分享</NavLink>
         <NavLink href="/stocks">提股記錄</NavLink>
-        {session && <NavLink href="/admin">後台管理</NavLink>}
-        {session && <NavLink href="/admin/mentions">提股</NavLink>}
-        {session && <NavLink href="/admin/commentary">法說會</NavLink>}
-        {session && <NavLink href="/admin/gurus">大神追蹤</NavLink>}
       </div>
 
       {/* User / Auth */}
