@@ -319,10 +319,35 @@ function CommentarySection({
               fontSize: 15,
               lineHeight: 1.8,
               color: '#333',
-              whiteSpace: 'pre-wrap',
             }}
           >
-            {body}
+            {(() => {
+              const shadowMarker = '【影子JG總結】';
+              const idx = (body || '').indexOf(shadowMarker);
+              if (idx === -1) {
+                return <span style={{ whiteSpace: 'pre-wrap' }}>{body}</span>;
+              }
+              const before = body!.slice(0, idx);
+              const after = body!.slice(idx + shadowMarker.length);
+              return (
+                <>
+                  <span style={{ whiteSpace: 'pre-wrap' }}>{before}</span>
+                  {/* Brand-stamp header for 影子JG總結 */}
+                  <div style={{ margin: '28px 0 16px' }}>
+                    <div style={{ height: 1, background: 'linear-gradient(90deg, #c9a84c 0%, #e8c97a 40%, transparent 100%)', marginBottom: 16 }} />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div style={{ width: 4, height: 36, background: '#cc1a22', flexShrink: 0 }} />
+                      <div>
+                        <div style={{ fontFamily: "'Raleway', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '3px', color: '#c9a84c', textTransform: 'uppercase', marginBottom: 3 }}>Shadow JG &middot; Member Exclusive</div>
+                        <div style={{ fontFamily: "'Noto Serif TC', serif", fontSize: 20, fontWeight: 900, color: '#cc1a22', lineHeight: 1.2 }}>影子JG總結</div>
+                      </div>
+                    </div>
+                    <div style={{ height: 1, background: 'linear-gradient(90deg, #c9a84c 0%, transparent 60%)', marginTop: 16 }} />
+                  </div>
+                  <span style={{ whiteSpace: 'pre-wrap' }}>{after}</span>
+                </>
+              );
+            })()}
           </div>
           {publishedAt && (
             <p
