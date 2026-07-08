@@ -202,7 +202,7 @@ function StockHeader({
           marginBottom: 12,
         }}
       >
-        ← 返回提股記錄
+        ← 返回頻道追蹤
       </a>
 
       {/* Symbol + company */}

@@ -92,8 +92,8 @@ export default function WelcomeModal() {
           {[
             {
               icon: '📊',
-              title: 'JG 提股資料庫',
-              desc: 'JG 歷年提股紀錄，追蹤每支股票的最新進展',
+              title: 'JG 頻道追蹤',
+              desc: '追蹤 JG 精選股票，掌握最新進展',
             },
             {
               icon: '🎯',

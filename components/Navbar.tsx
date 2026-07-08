@@ -37,9 +37,9 @@ export default function Navbar() {
       </Link>
 
       {/* Nav links */}
-      <div style={{ display: 'flex', gap: 28, alignItems: 'center' }}>
+      <div className="nav-links" style={{ display: 'flex', gap: 28, alignItems: 'center' }}>
         <NavLink href="/daily" active={pathname === '/daily'}>每日分享</NavLink>
-        <NavLink href="/stocks" active={pathname?.startsWith('/stocks') ?? false}>提股記錄</NavLink>
+        <NavLink href="/stocks" active={pathname?.startsWith('/stocks') ?? false}>頻道追蹤</NavLink>
       </div>
 
       {/* User / Auth */}
@@ -53,9 +53,10 @@ export default function Navbar() {
                 width={28}
                 height={28}
                 style={{ borderRadius: '50%' }}
+                onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
               />
             )}
-            <span style={{ fontSize: 13, color: '#555' }}>
+            <span className="nav-user-name" style={{ fontSize: 13, color: '#555' }}>
               {session.user?.name}
             </span>
             <button

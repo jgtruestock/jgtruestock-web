@@ -188,7 +188,7 @@ export default function StocksPage() {
           </div>
         ) : records.length === 0 ? (
           <div style={{ padding: '60px 0', textAlign: 'center', color: '#888', fontSize: 14 }}>
-            目前尚無提股記錄
+            目前尚無追蹤記錄
           </div>
         ) : (
           <>

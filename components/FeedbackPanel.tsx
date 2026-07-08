@@ -91,6 +91,7 @@ export default function FeedbackPanel() {
     <>
       {/* ── Floating trigger: gold + pulse + label (方案 C) ── */}
       <div
+        className="fb-trigger"
         style={{
           position: 'fixed',
           bottom: 28,

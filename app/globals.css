@@ -26,3 +26,17 @@ body {
   font-family: 'Noto Sans TC', sans-serif;
   -webkit-font-smoothing: antialiased;
 }
+
+/* ── Navbar responsive ── */
+@media (max-width: 600px) {
+  .nav-links { gap: 14px !important; }
+  .nav-user-name { display: none !important; }
+}
+@media (max-width: 380px) {
+  .nav-links { display: none !important; }
+}
+
+/* ── FeedbackPanel mobile: pull button above phone bottom bar ── */
+@media (max-width: 768px) {
+  .fb-trigger { bottom: 76px !important; }
+}
