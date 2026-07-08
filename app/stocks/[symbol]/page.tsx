@@ -10,6 +10,7 @@ import { getStockFilings, upsertStockFilings } from '@/lib/db/stockFilings';
 import { getStockPressReleases, upsertStockPressReleases } from '@/lib/db/stockPressReleases';
 import { fetchStockNews, fetchEarningsTranscript, fetchSecFilings, fetchPressReleases, EarningsTranscript } from '@/lib/fmp';
 import Navbar from '@/components/Navbar';
+import ActivityTracker from '@/components/ActivityTracker';
 import type { JGStockNewsArticle, SecFiling, PressRelease } from '@/types/commentary';
 
 interface StockPageProps {
@@ -565,6 +566,7 @@ export default async function StockDetailPage({ params }: StockPageProps) {
   return (
     <div style={{ minHeight: '100vh', background: '#f0f3f2' }}>
       <Navbar />
+      <ActivityTracker page={`/stocks/${upperSymbol}`} symbol={upperSymbol} />
 
       <div
         style={{

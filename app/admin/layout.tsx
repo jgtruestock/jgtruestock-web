@@ -7,6 +7,7 @@ const NAV_ITEMS = [
   { href: '/admin/mentions', label: '📈 提股管理' },
   { href: '/admin/commentary', label: '📝 法說會點評' },
   { href: '/admin/gurus', label: '🧠 大神追蹤' },
+  { href: '/admin/members', label: '👥 會員動態' },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
