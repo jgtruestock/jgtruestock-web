@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { signIn } from 'next-auth/react';
+import { signIn, signOut } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 
@@ -149,7 +149,11 @@ function LoginContent() {
 
         {/* Google sign-in button */}
         <button
-          onClick={() => signIn('google', { callbackUrl: '/stocks' })}
+          onClick={async () => {
+            // 先清除舊的 session/state，避免 OAuth state mismatch
+            try { await signOut({ redirect: false }); } catch {}
+            signIn('google', { callbackUrl: '/stocks' });
+          }}
           style={{
             display: 'flex',
             alignItems: 'center',
