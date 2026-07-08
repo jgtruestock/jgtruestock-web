@@ -39,7 +39,7 @@ export default function Navbar() {
 
       {/* Nav links */}
       <div style={{ display: 'flex', gap: 28, alignItems: 'center' }}>
-        <NavLink href="/">每日分享</NavLink>
+        <NavLink href="/daily">每日分享</NavLink>
         <NavLink href="/stocks">提股記錄</NavLink>
       </div>
 
