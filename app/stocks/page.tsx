@@ -81,23 +81,27 @@ export default function StocksPage() {
       <div style={{ maxWidth: 900, margin: '0 auto', padding: '28px 24px 48px' }}>
         {/* Header */}
         <div style={{ marginBottom: 20 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
-            <div style={{ width: 3, height: 28, background: '#c9a84c', flexShrink: 0 }}></div>
+          <div style={{ marginBottom: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+              <span style={{ fontFamily: "'Raleway', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '3px', color: '#c9a84c', textTransform: 'uppercase' }}>Member Exclusive</span>
+              <div style={{ height: 1, flex: 1, background: 'linear-gradient(90deg, #c9a84c, transparent)' }} />
+            </div>
             <h1
               style={{
                 fontFamily: "'Noto Serif TC', serif",
-                fontSize: 22,
+                fontSize: 24,
                 fontWeight: 900,
-                color: '#1A1A1A',
+                color: '#cc1a22',
                 letterSpacing: 0.5,
+                lineHeight: 1.3,
               }}
             >
-              會員專屬資料庫，每天更新最新情報
+              會員專屬資料庫
+              <span style={{ display: 'block', fontSize: 15, fontWeight: 400, color: '#555', fontFamily: "'Noto Sans TC', sans-serif", marginTop: 4, letterSpacing: 0 }}>
+                每天更新最新情報
+              </span>
             </h1>
           </div>
-          <p style={{ fontSize: 12, color: '#888', marginTop: 4, paddingLeft: 15 }}>
-            JG 在會員頻道提到過的每一支股票，提到後的表現
-          </p>
         </div>
 
         {/* Stats bar + Sort */}
