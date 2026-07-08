@@ -208,11 +208,11 @@ function StockHeader({
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
         <h1
           style={{
-            fontFamily: "'Noto Serif TC', serif",
+            fontFamily: "'Raleway', sans-serif",
             fontSize: 26,
-            fontWeight: 700,
-            color: '#D93025',
-            letterSpacing: 0.5,
+            fontWeight: 800,
+            color: '#1e1e1d',
+            letterSpacing: '1px',
             margin: 0,
           }}
         >
@@ -271,8 +271,8 @@ function CommentarySection({
   return (
     <div
       style={{
-        background: '#FAFAF8',
-        border: '1px solid #E0DCD6',
+        background: '#ffffff',
+        border: '1px solid #e0dcd6',
         borderLeft: '3px solid #c9a84c',
         borderRadius: 2,
         padding: '20px 24px',
@@ -281,11 +281,11 @@ function CommentarySection({
     >
       <h2
         style={{
-          fontFamily: "'Noto Serif TC', serif",
-          fontSize: 15,
-          fontWeight: 600,
-          color: '#999',
-          letterSpacing: 1,
+          fontFamily: "'Raleway', sans-serif",
+          fontSize: 11,
+          fontWeight: 700,
+          color: '#c9a84c',
+          letterSpacing: '3px',
           margin: '0 0 14px',
           textTransform: 'uppercase',
         }}
@@ -372,8 +372,8 @@ function NewsItem({ article }: { article: JGStockNewsArticle }) {
       >
         📰 {article.title}
       </a>
-      <div style={{ fontSize: 12, color: '#888' }}>
-        {article.source && <span>{article.source}</span>}
+      <div style={{ fontSize: 11, color: '#aaa' }}>
+        {article.source && <span style={{ fontFamily: "'Raleway', sans-serif", fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{article.source}</span>}
         {article.source && article.publishedDate && (
           <span style={{ margin: '0 6px', color: '#CCC' }}>·</span>
         )}
@@ -387,7 +387,7 @@ function SectionBox({ title, children }: { title: string; children: React.ReactN
   return (
     <div
       style={{
-        background: '#FAFAF8',
+        background: '#ffffff',
         border: '1px solid #E0DCD6',
         borderRadius: 2,
         padding: '20px 24px',
@@ -396,11 +396,11 @@ function SectionBox({ title, children }: { title: string; children: React.ReactN
     >
       <h2
         style={{
-          fontFamily: "'Noto Serif TC', serif",
-          fontSize: 15,
-          fontWeight: 600,
-          color: '#999',
-          letterSpacing: 1,
+          fontFamily: "'Raleway', sans-serif",
+          fontSize: 11,
+          fontWeight: 700,
+          color: '#c9a84c',
+          letterSpacing: '2px',
           margin: '0 0 14px',
           textTransform: 'uppercase',
         }}
@@ -477,7 +477,7 @@ function NewsFeed({ articles }: { articles: JGStockNewsArticle[] }) {
   return (
     <div
       style={{
-        background: '#FAFAF8',
+        background: '#ffffff',
         border: '1px solid #E0DCD6',
         borderRadius: 2,
         padding: '20px 24px',
@@ -486,11 +486,11 @@ function NewsFeed({ articles }: { articles: JGStockNewsArticle[] }) {
     >
       <h2
         style={{
-          fontFamily: "'Noto Serif TC', serif",
-          fontSize: 15,
-          fontWeight: 600,
-          color: '#999',
-          letterSpacing: 1,
+          fontFamily: "'Raleway', sans-serif",
+          fontSize: 11,
+          fontWeight: 700,
+          color: '#c9a84c',
+          letterSpacing: '2px',
           margin: '0 0 14px',
           textTransform: 'uppercase',
         }}
@@ -532,7 +532,7 @@ export default async function StockDetailPage({ params }: StockPageProps) {
     commentary?.status === 'published' && !!commentary?.publishedTitle;
 
   return (
-    <div style={{ minHeight: '100vh', background: '#FAFAF8' }}>
+    <div style={{ minHeight: '100vh', background: '#f0f3f2' }}>
       <Navbar />
 
       <div
@@ -577,7 +577,7 @@ export default async function StockDetailPage({ params }: StockPageProps) {
       {/* eslint-disable-next-line @next/next/no-css-tags */}
       <style>{`
         .news-link:hover {
-          color: #D93025 !important;
+          color: #cc1a22 !important;
         }
         @media (max-width: 768px) {
           .stock-detail-title { font-size: 22px !important; }

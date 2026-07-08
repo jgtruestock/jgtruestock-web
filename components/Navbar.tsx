@@ -1,16 +1,18 @@
 'use client';
 
 import { useSession, signOut } from 'next-auth/react';
+import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 
 export default function Navbar() {
   const { data: session } = useSession();
+  const pathname = usePathname();
 
   return (
     <nav
       style={{
-        background: '#FAFAF8',
+        background: '#f0f3f2',
         borderBottom: '1px solid #E0DCD6',
         padding: '0 24px',
         height: 52,
@@ -23,24 +25,21 @@ export default function Navbar() {
       }}
     >
       {/* Logo */}
-      <Link href="/" style={{ textDecoration: 'none' }}>
-        <span
-          style={{
-            fontFamily: "'Noto Serif TC', serif",
-            fontWeight: 700,
-            fontSize: 18,
-            color: '#1A1A1A',
-            letterSpacing: 0.3,
-          }}
-        >
-          JG<span style={{ color: '#D93025' }}>True</span>Stock
-        </span>
+      <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
+        <Image
+          src="/jg-logo.png"
+          alt="JGTrueStock"
+          height={40}
+          width={120}
+          style={{ objectFit: 'contain', height: 40, width: 'auto' }}
+          priority
+        />
       </Link>
 
       {/* Nav links */}
       <div style={{ display: 'flex', gap: 28, alignItems: 'center' }}>
-        <NavLink href="/daily">每日分享</NavLink>
-        <NavLink href="/stocks">提股記錄</NavLink>
+        <NavLink href="/daily" active={pathname === '/daily'}>每日分享</NavLink>
+        <NavLink href="/stocks" active={pathname?.startsWith('/stocks') ?? false}>提股記錄</NavLink>
       </div>
 
       {/* User / Auth */}
@@ -77,12 +76,15 @@ export default function Navbar() {
           <Link
             href="/login"
             style={{
-              fontSize: 13,
-              color: '#D93025',
+              fontSize: 12,
+              color: '#cc1a22',
               textDecoration: 'none',
-              border: '1px solid #D93025',
+              border: '1px solid #cc1a22',
               padding: '4px 14px',
-              fontWeight: 500,
+              fontFamily: "'Raleway', sans-serif",
+              fontWeight: 600,
+              letterSpacing: '0.5px',
+              textTransform: 'uppercase',
             }}
           >
             登入
@@ -93,15 +95,29 @@ export default function Navbar() {
   );
 }
 
-function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
+function NavLink({
+  href,
+  children,
+  active,
+}: {
+  href: string;
+  children: React.ReactNode;
+  active: boolean;
+}) {
   return (
     <Link
       href={href}
       style={{
-        fontSize: 13,
-        color: '#444',
+        fontFamily: "'Raleway', sans-serif",
+        fontWeight: 600,
+        fontSize: 12,
+        letterSpacing: '1px',
+        textTransform: 'uppercase',
+        color: active ? '#cc1a22' : '#444',
         textDecoration: 'none',
-        fontWeight: 500,
+        borderBottom: active ? '2px solid #cc1a22' : '2px solid transparent',
+        paddingBottom: 2,
+        transition: 'color 0.15s',
       }}
     >
       {children}

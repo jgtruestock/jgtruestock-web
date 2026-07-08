@@ -55,15 +55,6 @@ export default function StocksPage() {
     fetchData();
   }, [fetchData]);
 
-  const handleSort = (key: SortKey) => {
-    if (sortKey === key) {
-      setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc');
-    } else {
-      setSortKey(key);
-      setSortOrder('desc');
-    }
-  };
-
   const formatDate = (dateStr: string) => {
     return dateStr.slice(0, 10);
   };
@@ -77,14 +68,14 @@ export default function StocksPage() {
 
   if (loading && records.length === 0) {
     return (
-      <div style={{ minHeight: '100vh', background: '#FAFAF8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ minHeight: '100vh', background: '#f0f3f2', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <p style={{ color: '#888', fontSize: 14 }}>載入中...</p>
       </div>
     );
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#FAFAF8' }}>
+    <div style={{ minHeight: '100vh', background: '#f0f3f2' }}>
       <Navbar />
 
       <div style={{ maxWidth: 900, margin: '0 auto', padding: '28px 24px 48px' }}>
@@ -94,7 +85,7 @@ export default function StocksPage() {
             style={{
               fontFamily: "'Noto Serif TC', serif",
               fontSize: 22,
-              fontWeight: 700,
+              fontWeight: 900,
               color: '#1A1A1A',
               letterSpacing: 0.5,
             }}
@@ -119,16 +110,16 @@ export default function StocksPage() {
         >
           {stats && (
             <div style={{ fontSize: 12, color: '#666' }}>
-              <span>共 {stats.total} 支</span>
+              <span>共 <span style={{ fontFamily: "'Raleway', sans-serif", fontWeight: 800, color: '#1e1e1d' }}>{stats.total}</span> 支</span>
               <span style={{ color: '#CCC', margin: '0 6px' }}>｜</span>
               <span>
                 平均漲幅{' '}
-                <span style={{ color: stats.avgGainPct >= 0 ? '#1A7340' : '#C0392B', fontWeight: 600 }}>
+                <span style={{ fontFamily: "'Raleway', sans-serif", fontWeight: 800, color: stats.avgGainPct >= 0 ? '#2e7d52' : '#c0392b' }}>
                   {stats.avgGainPct >= 0 ? '+' : ''}{stats.avgGainPct}%
                 </span>
               </span>
               <span style={{ color: '#CCC', margin: '0 6px' }}>｜</span>
-              <span>正報酬 {stats.positiveRate}%</span>
+              <span>正報酬 <span style={{ fontFamily: "'Raleway', sans-serif", fontWeight: 800, color: '#1e1e1d' }}>{stats.positiveRate}%</span></span>
               <span style={{ color: '#CCC', margin: '0 6px' }}>｜</span>
               <span>每日收盤後自動更新</span>
               {stats?.lastUpdatedAt && (
@@ -141,16 +132,42 @@ export default function StocksPage() {
               )}
             </div>
           )}
-          <div style={{ display: 'flex', gap: 4 }}>
-            <SortButton active={sortKey === 'gainPct'} onClick={() => handleSort('gainPct')}>
-              漲幅 {sortKey === 'gainPct' ? (sortOrder === 'desc' ? '↓' : '↑') : '↕'}
-            </SortButton>
-            <SortButton active={sortKey === 'mentionDate'} onClick={() => handleSort('mentionDate')}>
-              最新日期
-            </SortButton>
-            <SortButton active={sortKey === 'symbol'} onClick={() => handleSort('symbol')}>
-              字母
-            </SortButton>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <label
+              htmlFor="sort-select"
+              style={{ fontSize: 12, color: '#888', whiteSpace: 'nowrap' }}
+            >
+              排序方式
+            </label>
+            <select
+              id="sort-select"
+              value={`${sortKey}:${sortOrder}`}
+              onChange={(e) => {
+                const [key, order] = e.target.value.split(':') as [SortKey, 'asc' | 'desc'];
+                setSortKey(key);
+                setSortOrder(order);
+              }}
+              style={{
+                fontFamily: "'Noto Sans TC', sans-serif",
+                fontSize: 12,
+                padding: '5px 28px 5px 10px',
+                border: '1px solid #D5D0C8',
+                borderRadius: 4,
+                background: '#FFFFFF',
+                color: '#333',
+                cursor: 'pointer',
+                outline: 'none',
+                appearance: 'none',
+                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23999' d='M6 8L1 3h10z'/%3E%3C/svg%3E")`,
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'right 8px center',
+              }}
+            >
+              <option value="gainPct:desc">漲幅（高→低）</option>
+              <option value="gainPct:asc">漲幅（低→高）</option>
+              <option value="mentionDate:desc">提到日期（最新→舊）</option>
+              <option value="mentionDate:asc">提到日期（最舊→新）</option>
+            </select>
           </div>
         </div>
 
@@ -216,10 +233,11 @@ export default function StocksPage() {
                       <td
                         style={{
                           padding: '10px 8px',
+                          fontFamily: "'Raleway', sans-serif",
                           fontSize: 14,
                           fontWeight: 700,
-                          color: '#D93025',
-                          letterSpacing: 0.5,
+                          color: '#1e1e1d',
+                          letterSpacing: '0.5px',
                           whiteSpace: 'nowrap',
                         }}
                       >
@@ -292,10 +310,11 @@ export default function StocksPage() {
                         style={{
                           padding: '10px 8px',
                           textAlign: 'right',
+                          fontFamily: "'Raleway', sans-serif",
                           fontSize: 13,
                           fontWeight: 700,
                           fontVariantNumeric: 'tabular-nums',
-                          color: gain.pos ? '#1A7340' : '#C0392B',
+                          color: gain.pos ? '#2e7d52' : '#c0392b',
                           whiteSpace: 'nowrap',
                         }}
                       >
@@ -310,14 +329,17 @@ export default function StocksPage() {
                       >
                         <span style={{
                           display: 'inline-block',
-                          background: navigating === rec.symbol ? '#C0392B' : '#E8E3DC',
-                          color: navigating === rec.symbol ? '#fff' : '#555',
+                          background: 'transparent',
+                          color: navigating === rec.symbol ? '#cc1a22' : '#c9a84c',
+                          border: navigating === rec.symbol ? '1px solid #cc1a22' : '1px solid #c9a84c',
+                          fontFamily: "'Raleway', sans-serif",
                           fontSize: 12,
-                          fontWeight: 600,
+                          fontWeight: 700,
                           padding: '3px 10px',
                           borderRadius: 4,
                           whiteSpace: 'nowrap',
-                          transition: 'background 0.1s',
+                          transition: 'border-color 0.1s, color 0.1s',
+                          letterSpacing: '0.5px',
                         }}>
                           {navigating === rec.symbol ? '載入中...' : '查看 →'}
                         </span>
@@ -347,9 +369,10 @@ export default function StocksPage() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                       <span
                         style={{
+                          fontFamily: "'Raleway', sans-serif",
                           fontSize: 14,
                           fontWeight: 700,
-                          color: '#D93025',
+                          color: '#1e1e1d',
                           minWidth: 56,
                         }}
                       >
@@ -380,10 +403,11 @@ export default function StocksPage() {
                       </span>
                       <span
                         style={{
+                          fontFamily: "'Raleway', sans-serif",
                           fontSize: 13,
                           fontWeight: 700,
                           fontVariantNumeric: 'tabular-nums',
-                          color: gain.pos ? '#1A7340' : '#C0392B',
+                          color: gain.pos ? '#2e7d52' : '#c0392b',
                           minWidth: 72,
                           textAlign: 'right',
                         }}
@@ -392,14 +416,17 @@ export default function StocksPage() {
                       </span>
                       <span style={{
                           display: 'inline-block',
-                          background: navigating === rec.symbol ? '#C0392B' : '#E8E3DC',
-                          color: navigating === rec.symbol ? '#fff' : '#555',
+                          background: 'transparent',
+                          color: navigating === rec.symbol ? '#cc1a22' : '#c9a84c',
+                          border: navigating === rec.symbol ? '1px solid #cc1a22' : '1px solid #c9a84c',
+                          fontFamily: "'Raleway', sans-serif",
                           fontSize: 11,
-                          fontWeight: 600,
+                          fontWeight: 700,
                           padding: '3px 8px',
                           borderRadius: 4,
                           marginLeft: 6,
                           whiteSpace: 'nowrap',
+                          letterSpacing: '0.5px',
                         }}>
                           {navigating === rec.symbol ? '載入...' : '查看→'}
                         </span>
@@ -437,31 +464,4 @@ export default function StocksPage() {
   );
 }
 
-function SortButton({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        fontFamily: "'Noto Sans TC', sans-serif",
-        fontSize: 11,
-        padding: '3px 10px',
-        border: '1px solid #D5D0C8',
-        background: active ? '#2D2D2D' : '#FAFAF8',
-        color: active ? '#FAFAF8' : '#555',
-        cursor: 'pointer',
-        transition: 'all 0.15s',
-        borderRadius: 0,
-      }}
-    >
-      {children}
-    </button>
-  );
-}
+

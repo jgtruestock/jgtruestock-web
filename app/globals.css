@@ -1,10 +1,10 @@
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700;800&family=Noto+Serif+TC:wght@400;600;700;900&family=Noto+Sans+TC:wght@300;400;500;600&display=swap');
 @import "tailwindcss";
 
 :root {
-  --bg: #FAFAF8;
+  --bg: #f0f3f2;
   --text: #2D2D2D;
-  --accent: #D93025;
+  --accent: #cc1a22;
   --green: #1A7340;
   --red: #C0392B;
   --border: #E0DCD6;
