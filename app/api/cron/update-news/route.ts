@@ -9,17 +9,16 @@ import type { JGStockNewsArticle, SecFiling, PressRelease } from '@/types/commen
 // Whitelist for news sources (case-insensitive contains match)
 const NEWS_SOURCE_WHITELIST = [
   'reuters',
-  'associated press',
-  'ap',
-  'bloomberg',
-  'wall street journal',
   'wsj',
-  'financial times',
-  'ft',
   'marketwatch',
-  'pr newswire',
-  'globe newswire',
+  'businesswire',
   'business wire',
+  'globenewswire',
+  'globe newswire',
+  'prnewswire',
+  'pr newswire',
+  'cnbc',
+  'barrons',
 ];
 
 function isWhitelistedSource(site: string): boolean {
