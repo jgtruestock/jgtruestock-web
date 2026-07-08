@@ -43,7 +43,7 @@ export async function middleware(req: NextRequest) {
       loginUrl.searchParams.set('callbackUrl', req.url);
       return NextResponse.redirect(loginUrl);
     }
-    if (!isAdmin(token)) return NextResponse.redirect(new URL('/', req.url));
+    if (!isAdmin(token)) return NextResponse.redirect(new URL('/login/admin', req.url));
     return NextResponse.next();
   }
 
