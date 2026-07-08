@@ -36,36 +36,40 @@ export const authOptions: NextAuthOptions = {
         token.sub = (profile as any).id;
       }
 
-      // Google member — look up by googleEmail in yt_members
+      // Google member — look up by channel binding → yt_members
       if (account?.provider === 'google') {
-        const googleEmail = token.email ?? null;
-        token.googleEmail = googleEmail;
+        const email = (token.email ?? '').toLowerCase();
+        token.googleEmail = email;
+        token.needsBinding = false;
+        token.memberExpired = false;
+        token.isYTMember = false;
+        token.channelId = null;
+        token.memberTier = null;
 
-        if (googleEmail) {
+        if (email) {
           try {
             const db = await getJgtDb();
-            const member = await db
-              .collection('yt_members')
-              .findOne({ googleEmail: { $regex: new RegExp(`^${googleEmail}$`, 'i') } });
-            if (member) {
-              token.isYTMember = true;
-              token.memberTier = member.tier;
-              token.channelId = member.channelId ?? null;
+            const binding = await db.collection('user_bindings').findOne({ email });
+
+            if (binding) {
+              // 已綁定，確認是否還在 yt_members
+              const member = await db.collection('yt_members').findOne({ channelId: binding.channelId });
+              if (member) {
+                token.isYTMember = true;
+                token.channelId = binding.channelId;
+                token.memberTier = member.tier ?? null;
+              } else {
+                token.memberExpired = true; // 曾是會員但名單已移除
+              }
             } else {
-              token.isYTMember = false;
-              token.memberTier = null;
-              token.channelId = null;
+              token.needsBinding = true; // 從未綁定，導到 /verify
             }
           } catch (err) {
-            console.error('yt_members lookup error:', err);
-            token.isYTMember = false;
-            token.memberTier = null;
-            token.channelId = null;
+            console.error('auth binding lookup error:', err);
+            token.needsBinding = true;
           }
         } else {
-          token.isYTMember = false;
-          token.memberTier = null;
-          token.channelId = null;
+          token.needsBinding = true;
         }
       }
 
@@ -81,6 +85,8 @@ export const authOptions: NextAuthOptions = {
         (session.user as any).channelId = token.channelId;
         (session.user as any).isYTMember = token.isYTMember;
         (session.user as any).memberTier = token.memberTier;
+        (session.user as any).needsBinding = token.needsBinding;
+        (session.user as any).memberExpired = token.memberExpired;
       }
       return session;
     },

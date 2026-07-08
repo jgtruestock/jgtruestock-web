@@ -27,6 +27,18 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
+  // /verify — 綁定頁，已登入才能進，不需要 isYTMember
+  if (pathname.startsWith('/verify')) {
+    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    if (!token) return NextResponse.redirect(new URL('/login', req.url));
+    return NextResponse.next();
+  }
+
+  // /not-member — 公開頁面，不擋
+  if (pathname.startsWith('/not-member')) {
+    return NextResponse.next();
+  }
+
   // /api/admin/** — return JSON errors
   if (pathname.startsWith('/api/admin/')) {
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
@@ -66,11 +78,17 @@ export async function middleware(req: NextRequest) {
     // Admin → always allow (Discord or Google admin email)
     if (isAdmin(token)) return NextResponse.next();
 
-    // Google user → must be YT member
-    if (!token.isYTMember) {
-      return NextResponse.redirect(
-        new URL('/login?error=not_member', req.url)
-      );
+    // Google user → check binding state
+    if (token.provider === 'google') {
+      if ((token as any).needsBinding) {
+        return NextResponse.redirect(new URL('/verify', req.url));
+      }
+      if ((token as any).memberExpired) {
+        return NextResponse.redirect(new URL('/not-member', req.url));
+      }
+      if (!token.isYTMember) {
+        return NextResponse.redirect(new URL('/not-member', req.url));
+      }
     }
 
     return NextResponse.next();
@@ -88,5 +106,9 @@ export const config = {
     '/admin',
     '/stocks/:path*',
     '/stocks',
+    '/verify',
+    '/verify/:path*',
+    '/not-member',
+    '/not-member/:path*',
   ],
 };
