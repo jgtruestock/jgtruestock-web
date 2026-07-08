@@ -66,10 +66,10 @@ export async function middleware(req: NextRequest) {
     // Admin → always allow (Discord or Google admin email)
     if (isAdmin(token)) return NextResponse.next();
 
-    // Google user → must be YT member; if not yet verified, go to register-channel
+    // Google user → must be YT member
     if (!token.isYTMember) {
       return NextResponse.redirect(
-        new URL('/register-channel', req.url)
+        new URL('/login?error=not_member', req.url)
       );
     }
 

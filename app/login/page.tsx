@@ -143,7 +143,7 @@ function LoginContent() {
               background: 'oklch(0.20 0.01 65)',
             }}
           >
-            你的 Google 帳號尚未加入 JG 頻道會員，請先加入後再登入
+            你的 Google 帳號還沒在系統裡。請先加入 JG 頻道會員，加入後再登入。如果你已經是會員，請向 JG 回報你的 Google 信笱以開通權限。
           </div>
         )}
 
