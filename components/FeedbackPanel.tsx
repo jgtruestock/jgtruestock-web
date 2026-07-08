@@ -109,18 +109,24 @@ export default function FeedbackPanel() {
               background: '#cc1a22',
               color: '#fff',
               border: 'none',
-              padding: '7px 14px',
-              fontFamily: "'Raleway', sans-serif",
-              fontSize: 12,
-              fontWeight: 700,
-              letterSpacing: '1px',
+              padding: '6px 16px 6px 14px',
+              fontFamily: "Raleway, 'Noto Sans TC', sans-serif",
+              fontSize: 11,
+              fontWeight: 800,
+              letterSpacing: '2.5px',
+              textTransform: 'uppercase',
               cursor: 'pointer',
               whiteSpace: 'nowrap',
-              boxShadow: '0 3px 12px rgba(204,26,34,0.4)',
+              boxShadow: '0 3px 14px rgba(204,26,34,0.45)',
               animation: 'fbTagIn 0.3s ease',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              lineHeight: 1,
             }}
           >
-            給 JG 說 →
+            <span style={{ fontSize: 14, lineHeight: 1 }}>💬</span>
+            <span>JG 說</span>
           </button>
         )}
 
