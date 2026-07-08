@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import SessionProvider from '@/components/SessionProvider';
+import FeedbackPanel from '@/components/FeedbackPanel';
 
 export const metadata: Metadata = {
   title: 'JGTrueStock',
@@ -15,7 +16,10 @@ export default function RootLayout({
   return (
     <html lang="zh-TW">
       <body>
-        <SessionProvider>{children}</SessionProvider>
+        <SessionProvider>
+          {children}
+          <FeedbackPanel />
+        </SessionProvider>
       </body>
     </html>
   );
