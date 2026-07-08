@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import ActivityTracker from '@/components/ActivityTracker';
+import WelcomeModal from '@/components/WelcomeModal';
 
 interface MentionRecord {
   _id: string;
@@ -77,6 +78,7 @@ export default function StocksPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#f0f3f2' }}>
+      <WelcomeModal />
       <Navbar />
       <ActivityTracker page="/stocks" />
 

@@ -59,10 +59,49 @@ export default function VerifyPage() {
           <h1 className="text-xl font-semibold text-gray-900 mb-2">
             確認你的頻道會員身份
           </h1>
-          <p className="text-gray-500 text-sm mb-6">
-            請貼上你加入會員的 YouTube 頻道連結或 @handle，例如：
-            <span className="font-medium text-gray-700"> youtube.com/@yourname</span>
+          <p className="text-gray-500 text-sm mb-4">
+            貼上你的 YouTube 頻道連結，系統會自動確認你是否為頻道會員
           </p>
+
+          {/* 步驟式說明 */}
+          <div
+            style={{ background: '#f5f5f5', borderRadius: 10, padding: '16px 20px', marginBottom: 20 }}
+          >
+            <p className="text-sm font-semibold text-gray-700 mb-3">怎麼找到我的頻道連結？</p>
+            <ol style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {[
+                '打開 YouTube（手機或電腦）',
+                '點右上角的頭像 / 大頭照',
+                '點「查看頻道」',
+                '複製網址列的連結，貼到下面的輸入框',
+              ].map((step, i) => (
+                <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: 22,
+                      height: 22,
+                      borderRadius: '50%',
+                      background: '#cc1a22',
+                      color: '#fff',
+                      fontSize: 11,
+                      fontWeight: 700,
+                      flexShrink: 0,
+                      marginTop: 1,
+                    }}
+                  >
+                    {i + 1}
+                  </span>
+                  <span className="text-sm text-gray-600">{step}</span>
+                </li>
+              ))}
+            </ol>
+            <p className="text-sm mt-3" style={{ color: '#c9a84c', fontWeight: 600 }}>
+              👉 連結通常長這樣：youtube.com/@yourname
+            </p>
+          </div>
 
           {success ? (
             <div className="text-center py-6">
@@ -76,7 +115,7 @@ export default function VerifyPage() {
                   type="text"
                   value={channelUrl}
                   onChange={(e) => setChannelUrl(e.target.value)}
-                  placeholder="youtube.com/@yourhandle 或 @yourhandle"
+                  placeholder="貼上你的頻道連結，例如：youtube.com/@yourname 或 @yourname"
                   className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:border-transparent"
                   style={{ '--tw-ring-color': '#cc1a22' } as React.CSSProperties}
                   disabled={loading}
