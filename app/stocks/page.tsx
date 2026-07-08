@@ -92,7 +92,7 @@ export default function StocksPage() {
                 letterSpacing: 0.5,
               }}
             >
-              JG 提股記錄
+              會員專屬資料庫，每天更新最新情報
             </h1>
           </div>
           <p style={{ fontSize: 12, color: '#888', marginTop: 4, paddingLeft: 15 }}>
