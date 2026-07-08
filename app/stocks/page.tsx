@@ -81,18 +81,21 @@ export default function StocksPage() {
       <div style={{ maxWidth: 900, margin: '0 auto', padding: '28px 24px 48px' }}>
         {/* Header */}
         <div style={{ marginBottom: 20 }}>
-          <h1
-            style={{
-              fontFamily: "'Noto Serif TC', serif",
-              fontSize: 22,
-              fontWeight: 900,
-              color: '#1A1A1A',
-              letterSpacing: 0.5,
-            }}
-          >
-            JG 提股記錄
-          </h1>
-          <p style={{ fontSize: 12, color: '#888', marginTop: 4 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
+            <div style={{ width: 3, height: 28, background: '#c9a84c', flexShrink: 0 }}></div>
+            <h1
+              style={{
+                fontFamily: "'Noto Serif TC', serif",
+                fontSize: 22,
+                fontWeight: 900,
+                color: '#1A1A1A',
+                letterSpacing: 0.5,
+              }}
+            >
+              JG 提股記錄
+            </h1>
+          </div>
+          <p style={{ fontSize: 12, color: '#888', marginTop: 4, paddingLeft: 15 }}>
             JG 在會員頻道提到過的每一支股票，提到後的表現
           </p>
         </div>
@@ -110,7 +113,7 @@ export default function StocksPage() {
         >
           {stats && (
             <div style={{ fontSize: 12, color: '#666' }}>
-              <span>共 <span style={{ fontFamily: "'Raleway', sans-serif", fontWeight: 800, color: '#1e1e1d' }}>{stats.total}</span> 支</span>
+              <span>共 <span style={{ fontFamily: "'Raleway', sans-serif", fontWeight: 800, color: '#c9a84c' }}>{stats.total}</span> 支</span>
               <span style={{ color: '#CCC', margin: '0 6px' }}>｜</span>
               <span>
                 平均漲幅{' '}
@@ -119,7 +122,7 @@ export default function StocksPage() {
                 </span>
               </span>
               <span style={{ color: '#CCC', margin: '0 6px' }}>｜</span>
-              <span>正報酬 <span style={{ fontFamily: "'Raleway', sans-serif", fontWeight: 800, color: '#1e1e1d' }}>{stats.positiveRate}%</span></span>
+              <span>正報酬 <span style={{ fontFamily: "'Raleway', sans-serif", fontWeight: 800, color: '#c9a84c' }}>{stats.positiveRate}%</span></span>
               <span style={{ color: '#CCC', margin: '0 6px' }}>｜</span>
               <span>每日收盤後自動更新</span>
               {stats?.lastUpdatedAt && (
@@ -236,7 +239,7 @@ export default function StocksPage() {
                           fontFamily: "'Raleway', sans-serif",
                           fontSize: 14,
                           fontWeight: 700,
-                          color: '#1e1e1d',
+                          color: '#cc1a22',
                           letterSpacing: '0.5px',
                           whiteSpace: 'nowrap',
                         }}
@@ -372,7 +375,7 @@ export default function StocksPage() {
                           fontFamily: "'Raleway', sans-serif",
                           fontSize: 14,
                           fontWeight: 700,
-                          color: '#1e1e1d',
+                          color: '#cc1a22',
                           minWidth: 56,
                         }}
                       >

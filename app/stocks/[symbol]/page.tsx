@@ -211,7 +211,7 @@ function StockHeader({
             fontFamily: "'Raleway', sans-serif",
             fontSize: 26,
             fontWeight: 800,
-            color: '#1e1e1d',
+            color: '#cc1a22',
             letterSpacing: '1px',
             margin: 0,
           }}
@@ -249,7 +249,13 @@ function StockHeader({
             </>
           )}
           {gain && (
-            <span style={{ fontWeight: 600, color: gain.color }}>{gain.label}</span>
+            <span style={{ fontFamily: "'Raleway', sans-serif", fontWeight: 700, fontSize: 13, color: gain.color }}>{gain.label}</span>
+          )}
+          {stockInfo?.latestClose != null && (
+            <>
+              <span style={{ color: '#CCC' }}>·</span>
+              <span style={{ fontFamily: "'Raleway', sans-serif", fontWeight: 600, color: '#c9a84c' }}>${stockInfo.latestClose.toFixed(2)}</span>
+            </>
           )}
         </div>
       )}
