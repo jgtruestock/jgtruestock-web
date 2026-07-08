@@ -2,10 +2,11 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { signOut } from 'next-auth/react';
+import { signOut, useSession } from 'next-auth/react';
 
 export default function VerifyPage() {
   const router = useRouter();
+  const { update } = useSession();
   const [channelUrl, setChannelUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -27,6 +28,8 @@ export default function VerifyPage() {
 
       if (data.success) {
         setSuccess(true);
+        // Force session refresh so middleware sees new isYTMember=true
+        await update();
         setTimeout(() => router.push('/stocks'), 1500);
       } else {
         setError(data.error ?? '發生錯誤，請稍後再試');

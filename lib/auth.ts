@@ -36,8 +36,8 @@ export const authOptions: NextAuthOptions = {
         token.sub = (profile as any).id;
       }
 
-      // Google member — look up by channel binding → yt_members
-      if (account?.provider === 'google') {
+      // Google member — look up by channel binding → yt_members (always re-check, not just on first sign-in)
+      if (token.provider === 'google' || account?.provider === 'google') {
         const email = (token.email ?? '').toLowerCase();
         token.googleEmail = email;
         token.needsBinding = false;
