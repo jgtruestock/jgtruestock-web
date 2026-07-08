@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import { signIn } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
@@ -8,6 +9,13 @@ function LoginContent() {
   const searchParams = useSearchParams();
   const error = searchParams.get('error');
   const isNotMember = error === 'not_member';
+
+  // Detect LINE/FB/Instagram WebView
+  const [isWebView, setIsWebView] = React.useState(false);
+  React.useEffect(() => {
+    const ua = navigator.userAgent;
+    setIsWebView(/Line|FBAN|FBAV|FB_IAB|Instagram|Twitter|Snapchat|TelegramWebview/.test(ua));
+  }, []);
 
   return (
     <div
@@ -96,6 +104,30 @@ function LoginContent() {
           <br />
           跟上暴漲暴跌的變化
         </p>
+
+        {/* WebView warning */}
+        {isWebView && (
+          <div
+            style={{
+              background: 'rgba(204,26,34,0.15)',
+              border: '1px solid rgba(204,26,34,0.4)',
+              borderLeft: '3px solid #cc1a22',
+              padding: '14px 16px',
+              marginBottom: 24,
+              borderRadius: 2,
+            }}
+          >
+            <div style={{ fontFamily: "'Raleway', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '1px', color: '#cc1a22', marginBottom: 6, textTransform: 'uppercase' }}>
+              ⚠️ 無法在此瀏覽器登入
+            </div>
+            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)', lineHeight: 1.7 }}>
+              你目前在 LINE 或 App 的內建瀏覽器。Google 不允許在這裡登入。
+            </div>
+            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 8, lineHeight: 1.7 }}>
+              請點右上角 <strong style={{ color: '#fff' }}>「⋯」→「用瀏覽器開啟」</strong>，再用 Chrome 或 Safari 登入。
+            </div>
+          </div>
+        )}
 
         {/* Not member warning */}
         {isNotMember && (
