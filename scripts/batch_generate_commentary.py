@@ -99,8 +99,38 @@ class FMPClient:
                 logging.warning(f"[FMP] transcript {symbol} {y}Q{q}: {e}")
         return None
 
+    def fetch_sec_filings(self, symbol: str, limit: int = 20) -> list:
+        """取得 8-K SEC 重大申報"""
+        try:
+            resp = requests.get(
+                f"{FMP_BASE_URL}/sec_filings",
+                params={"symbol": symbol, "type": "8-K", "limit": limit, "apikey": self.api_key},
+                timeout=15,
+            )
+            if resp.status_code == 200:
+                data = resp.json()
+                return data if isinstance(data, list) else []
+        except Exception as e:
+            logging.warning(f"[FMP] sec_filings {symbol}: {e}")
+        return []
+
+    def fetch_press_releases(self, symbol: str, limit: int = 20) -> list:
+        """取得官方 Press Release"""
+        try:
+            resp = requests.get(
+                f"{FMP_BASE_URL}/press-releases",
+                params={"symbol": symbol, "limit": limit, "apikey": self.api_key},
+                timeout=15,
+            )
+            if resp.status_code == 200:
+                data = resp.json()
+                return data if isinstance(data, list) else []
+        except Exception as e:
+            logging.warning(f"[FMP] press_releases {symbol}: {e}")
+        return []
+
     def fetch_stock_news(self, symbol: str, limit: int = 30) -> list:
-        """取得近期新聞"""
+        """取得股票相關新聞（正確端點：/stable/news/stock）"""
         try:
             resp = requests.get(
                 f"{FMP_BASE_URL}/news/stock",
@@ -111,7 +141,7 @@ class FMPClient:
                 data = resp.json()
                 return data if isinstance(data, list) else []
         except Exception as e:
-            logging.warning(f"[FMP] news {symbol}: {e}")
+            logging.warning(f"[FMP] stock_news {symbol}: {e}")
         return []
 
     def get_current_price(self, symbol: str) -> Optional[float]:
@@ -131,6 +161,14 @@ class FMPClient:
         return None
 
 
+# ── Wire News 白名單 ──────────────────────────────────────────────────────────
+
+WIRE_NEWS_WHITELIST = ['reuters', 'associated press', 'ap news', 'bloomberg', 'wall street journal', 'wsj', 'financial times', 'ft.com', 'marketwatch', 'prnewswire', 'pr newswire', 'globenewswire', 'globe newswire', 'businesswire', 'business wire']
+
+def filter_wire_news(news: list) -> list:
+    return [n for n in news if any(w in (n.get('site','') or '').lower() for w in WIRE_NEWS_WHITELIST)]
+
+
 # ── Claude AI 生成 ────────────────────────────────────────────────────────────
 
 def build_system_prompt() -> str:
@@ -141,36 +179,30 @@ def build_system_prompt() -> str:
 - 語氣如財經新聞，不加入個人意見
 - 只陳述事實，不做預測
 - 引用具體數字和新聞標題作為依據
-- 不要使用任何 Markdown 格式，不要在段落標題前加 # 或 ## 符號
+- 絕對禁止使用任何 Markdown 或格式符號，包括：** 粗體、* 斜體、--- 分隔線、[ ] 括號說明、> 引用塊。只用普通中文標點符號。段落之間用空行分隔。
+- 不要在段落標題前加 # 或 ## 符號
 
 必須嚴格遵守輸出格式：
 標題：（一句話總結這次法說會 vs 最新動態的比對結果）
 ---
 【法說會方向】
-（最新一季管理層在法說會說了什麼，包括財務結果、指引、重要計畫，引用具體數字和原話，150-200字）
+第一段（必寫）：2-3 句总結公司這季的整體發展大方向。像是給朋友的簡短說明，說清楚「這家公司現在在做什麼、往哪裡走、有沒有什麼關鍵轉變」。
+
+後續各點（精簡）：財務結果、下季指引、重大計畫、時間承諾、需求展望、風險提示、競爭定位。引用原話但要精簡，少用南従長句，讓人讀起來不累。
 
 【最近官方動態】
-（根據最近 30 天新聞，找出與法說會相關的具體發展或變化，必須引用新聞標題和日期，150-200字）
+（根據提供的8-K申報、官方公告、Wire News，找出與法說會方向相關的具體發展。若有資料，必須引用標題/日期/具體內容，詳細說明是否印證或背離法說會陳述。若三類資料均無，直接說明並指出資訊空窗的意義。）
 
 【影子JG總結】
-✅ 對得上：法說會方向有哪些新事件在印證
-⚠️ 尚待觀察：法說會說了但尚未被新事件確認的項目
-🔴 警訊：有哪些新事件違背或矛盾法說會的陳述（若無則寫「暫無明顯警訊」）"""
+目前狀況：（一到兩句超白話的口語，像在跟朋友說話一樣。不用財經术語，直接說【這家公司現在看起來怎樣】。例如：「這家公司法說會說得信心滿滿，但近一個月對媒體報導來說比較少，現在說得多做得到次再說。」）
+
+✅ 對得上：（白話文列出，法說會說什麼、新聞說什麼，吠合上了。這有2字「吠合」的換法就是：公司說要做 X，新聞顯示 X 推進中）
+⚠️ 尚待觀察：（白話文列出，法說會說了但還沒看到實際動靜。用【還對不上，需要再看】這種語氣。最後加一句邀請截句：「上面這些如果戰友有看到相關消息，記得告訴 JG！」）
+🔴 警訊：（白話文列出。公司說了 A，但新聞說的是 B，有落差。若無，寫「目前沒有看到明顯矛盾的報導」）"""
 
 
-def build_user_prompt(symbol: str, transcript: Optional[dict], news: list,
-                      mention_date: str, mention_close: float, latest_close: float) -> str:
-    if mention_close > 0:
-        diff_pct = ((latest_close - mention_close) / mention_close) * 100
-        direction = "上漲" if diff_pct >= 0 else "下跌"
-        price_str = f"（{direction} {abs(diff_pct):.1f}%）"
-    else:
-        price_str = ""
-
-    stock_info = f"""【股票】{symbol}
-【參考日期】{mention_date}
-【參考股價】${mention_close}
-【目前股價】${latest_close}{price_str}"""
+def build_user_prompt(symbol: str, transcript: Optional[dict], official_data: dict, wire_news: list) -> str:
+    stock_info = f"""【股票】{symbol}"""
 
     if transcript:
         content = transcript.get("content", "")
@@ -185,42 +217,85 @@ def build_user_prompt(symbol: str, transcript: Optional[dict], news: list,
     else:
         transcript_section = "【法說會資料】本期暫無法說會逐字稿，請根據新聞進行分析。"
 
-    if news:
-        news_items = "\n".join(
-            f"{i+1}. [{n.get('publishedDate', '')[:10]}] {n.get('title', '')}（來源：{n.get('site', '')}）"
-            for i, n in enumerate(news[:15])
+    filings = official_data.get('filings', [])
+    press_releases = official_data.get('press_releases', [])
+
+    if filings:
+        filing_items = "\n".join(
+            f"{i+1}. [8-K] [{f.get('fillingDate', '')[:10]}] {f.get('type', '8-K')} 申報 — {f.get('finalLink') or f.get('link', '')}"
+            for i, f in enumerate(filings[:10])
         )
-        news_section = f"【近期重要新聞】（最新 {min(len(news), 15)} 則）\n{news_items}"
+        filings_section = f"【8-K 重大申報】（最近 {min(len(filings), 10)} 筆）\n{filing_items}"
     else:
-        news_section = "【近期新聞】暫無新聞資料。"
+        filings_section = "【8-K 重大申報】暫無近期申報。"
+
+    if press_releases:
+        pr_items = "\n".join(
+            f"{i+1}. [{p.get('date', '')[:10]}] {p.get('title', '')}"
+            for i, p in enumerate(press_releases[:10])
+        )
+        pr_section = f"【官方公告（Press Release）】（最近 {min(len(press_releases), 10)} 筆）\n{pr_items}"
+    else:
+        pr_section = "【官方公告（Press Release）】暫無近期公告。"
+
+    if wire_news:
+        wire_items = "\n".join(
+            f"{i+1}. [{n.get('publishedDate', '')[:10]}] [{n.get('site', '')}] {n.get('title', '')}"
+            for i, n in enumerate(wire_news[:10])
+        )
+        wire_section = f"【權威媒體報導（Wire News）】（最近 {min(len(wire_news), 10)} 筆）\n{wire_items}"
+    else:
+        wire_section = "【權威媒體報導（Wire News）】暫無近期報導。"
+
+    # Wire news 區塊（30天新聞比對用）
+    if wire_news:
+        wire_items_str = "\n".join(
+            f"{i+1}. [{n.get('publishedDate','')[:10]}] [{n.get('site','')}] {n.get('title','')}"
+            for i, n in enumerate(wire_news[:15])
+        )
+        wire_block = f"【近30天白名單新聞（Reuters/WSJ/MarketWatch/BusinessWire/GlobeNewswire/CNBC/Barron's）】\n{wire_items_str}"
+    else:
+        wire_block = "【近30天白名單新聞】近期無來自 Reuters、WSJ、MarketWatch、BusinessWire、GlobeNewswire、CNBC、Barron's 的報導。"
+
+    # 官方申報區塊（純列表）
+    official_lines = []
+    for f in filings[:10]:
+        official_lines.append(f"- [8-K {f.get('fillingDate','')[:10]}] {f.get('type','')} 申報")
+    for p in press_releases[:10]:
+        official_lines.append(f"- [PR {p.get('date','')[:10]}] {p.get('title','')}")
+    if official_lines:
+        official_block = "【官方申報列表（8-K / Press Release）】\n" + "\n".join(official_lines)
+    else:
+        official_block = "【官方申報列表（8-K / Press Release）】近期無8-K申報或Press Release。"
 
     return f"""{stock_info}
 
 {transcript_section}
 
-{news_section}
+{wire_block}
 
-請對 {symbol} 產出以下三段式比對分析：
+{official_block}
+
+請對 {symbol} 產出四段式分析：
 
 【法說會方向】
-最新一季管理層在法說會陳述的經營方向：包括財務結果、資本支出計畫、產品路線、下季指引。
-必須引用具體數字和管理層原話。
-同時提取以下四個面向：
-- 明確時間承諾：管理層有沒有說「by Q3 we will...」「年底前完成...」這類有時間節點的承諾（若有請逐一列出）
-- 需求展望：管理層怎麼描述市場需求（用原話引用）
-- 風險提示：管理層自己提到的不確定性或風險
-- 競爭/定位陳述：提到競爭對手或市場地位的說法
+第一段（必寫）：2-3 句总結公司這季的整體發展大方向，說清楚這家公司現在在做什麼、往哪裡走、有沒有關鍵轉變。
 
-【最近官方動態】
-根據以上法說會方向，查找最近 30 天新聞中有哪些「官方動態」與法說會內容相關。
-必須引用具體新聞標題和發佈日期作為依據。
+後續各點（精簡）：財務結果、下季指引、重大計畫、時間承諾、需求展望（引用原話）、風險提示、競爭定位。請精簡，少用南従長句，讓人讀起來不累。
+
+【30天新聞比對】
+這是整篇點評的核心。針對上方「近30天白名單新聞」的每一條，說明標題、來源、日期，然後中性判斷：這條新聞與法說會說的方向是「一致」、「脫離或矛盾」還是「無直接關聯」。若無新聞，直接說明。
+
+【官方申報】
+純列表，不加分析。根據上方「官方申報列表」列出所有8-K和Press Release的標題與日期。若無，說明無。
 
 【影子JG總結】
-對比兩部分，以中性客觀的角度列出：
-✅ 對得上：法說會方向有哪些新事件在印證
-⚠️ 尚待觀察：法說會說了但尚未被新事件確認的項目
-🔴 警訊：有哪些新事件違背或矛盾法說會的陳述（若無則寫「暫無明顯警訊」）
-不要下購買建議。"""
+目前狀況：超白話的口語，一到兩句，說明這家公司現在看起來怎樣。
+✅ 對得上：超白話列出，法說會說了什麼、新聞說什麼，吠合了
+⚠️ 尚待觀察：超白話列出，法說會說了但還沒看到實際動靜
+🔴 警訊：超白話列出矛盾點，若無則寫「目前沒有看到明顯矛盾的報導」
+
+不使用任何Markdown符號（**、*、---、##、__）。"""
 
 
 def parse_response(text: str) -> tuple[str, str]:
@@ -230,7 +305,13 @@ def parse_response(text: str) -> tuple[str, str]:
 
     sep_idx = text.find("---")
     body = text[sep_idx + 3:].strip() if sep_idx >= 0 else text.strip()
-    body = re.sub(r'^#{1,3}\s*', '', body, flags=re.MULTILINE)
+    # 清除 markdown 殘留
+    body = re.sub(r'\*{1,3}', '', body)          # ** bold * italic
+    body = re.sub(r'^-{3,}\s*$', '', body, flags=re.MULTILINE)  # --- 分隔線
+    body = re.sub(r'^#{1,3}\s*', '', body, flags=re.MULTILINE)  # ## 標題
+    body = re.sub(r'_{1,2}', '', body)            # __underline_
+    body = re.sub(r'\n{3,}', '\n\n', body)        # 多餘空行
+    body = body.strip()
     return title, body
 
 
@@ -251,22 +332,31 @@ def parse_json_safe(text: str, fallback=None):
     return fallback
 
 
-def build_news_text(news: list) -> str:
-    if not news:
-        return "（無新聞資料）"
-    return "\n".join(
-        f"{i+1}. [{n.get('publishedDate', '')[:10]}] {n.get('title', '')}（{n.get('site', '')}）"
-        for i, n in enumerate(news[:30])
-    )
+def build_official_events_text(official_data: dict, wire_news: list = None) -> str:
+    """把 8-K + Press Release + Wire News 轉成純文字給 LLM 比對用"""
+    filings = official_data.get('filings', [])
+    press_releases = official_data.get('press_releases', [])
+    if wire_news is None:
+        wire_news = []
+    lines = []
+    for i, f in enumerate(filings[:15]):
+        lines.append(f"{i+1}. [8-K {f.get('fillingDate', '')[:10]}] SEC 重大申報 {f.get('type', '')}")
+    offset = len(lines)
+    for i, p in enumerate(press_releases[:15]):
+        lines.append(f"{offset+i+1}. [PR {p.get('date', '')[:10]}] {p.get('title', '')}")
+    offset = len(lines)
+    for i, n in enumerate(wire_news[:10]):
+        lines.append(f"{offset+i+1}. [Wire {n.get('publishedDate', '')[:10]}] [{n.get('site', '')}] {n.get('title', '')}")
+    return "\n".join(lines) if lines else "（無官方申報或公告）"
 
 
-def generate_key_points(client, transcript: Optional[dict], news: list) -> list:
-    """兩段式 KeyPoint 生成"""
+def generate_key_points(client, transcript: Optional[dict], official_data: dict, wire_news: list = None) -> list:
+    """兩段式 KeyPoint 生成（基於 8-K + Press Release + Wire News）"""
     if not transcript:
         return []
 
     transcript_text = transcript.get("content", "")[:8000]
-    news_text = build_news_text(news)
+    news_text = build_official_events_text(official_data, wire_news or [])
 
     # Step 1: 從逐字稿提取要點
     step1_prompt = f"""你是財務分析師。從以下法說會逐字稿提取管理層的可驗證要點。
@@ -332,7 +422,7 @@ def generate_key_points(client, transcript: Optional[dict], news: list) -> list:
 法說會要點：
 {json.dumps(step1_results, ensure_ascii=False, indent=2)}
 
-最近 30 天新聞：
+最近官方申報、公告與權威媒體報導（8-K + Press Release + Wire News）：
 {news_text}"""
 
     try:
@@ -364,25 +454,27 @@ def generate_key_points(client, transcript: Optional[dict], news: list) -> list:
     return key_points
 
 
-def generate_commentary(claude_client, fmp: FMPClient, symbol: str,
-                        mention_date: str, mention_close: float) -> dict:
+def generate_commentary(claude_client, fmp: FMPClient, symbol: str) -> dict:
     """完整生成一支股票的點評（3 次 Claude 呼叫）"""
-    # 1. 取得最新股價
-    latest_close = fmp.get_current_price(symbol) or 0.0
-
-    # 2. 取得法說會逐字稿
+    # 1. 取得法說會逐字稿
     transcript = fmp.fetch_earnings_transcript(symbol)
 
-    # 3. 取得新聞
-    news = fmp.fetch_stock_news(symbol, 30)
+    # 2. 取得官方申報與公告（8-K + Press Release）
+    filings = fmp.fetch_sec_filings(symbol, 20)
+    press_releases = fmp.fetch_press_releases(symbol, 20)
+    official_data = {"filings": filings, "press_releases": press_releases}
+
+    # 3. 取得 Wire News（白名單過濾）
+    raw_news = fmp.fetch_stock_news(symbol, 30)
+    wire_news = filter_wire_news(raw_news)
 
     # 4. 呼叫 Claude 生成 title + body（第 1 次）
     system_prompt = build_system_prompt()
-    user_prompt = build_user_prompt(symbol, transcript, news, mention_date, mention_close, latest_close)
+    user_prompt = build_user_prompt(symbol, transcript, official_data, wire_news)
 
     response = claude_client.messages.create(
         model=CLAUDE_MODEL,
-        max_tokens=3000,
+        max_tokens=6000,
         system=system_prompt,
         messages=[{"role": "user", "content": user_prompt}],
     )
@@ -390,7 +482,7 @@ def generate_commentary(claude_client, fmp: FMPClient, symbol: str,
     title, body = parse_response(text)
 
     # 5. 呼叫 Claude 生成 key points（第 2+3 次）
-    key_points = generate_key_points(claude_client, transcript, news)
+    key_points = generate_key_points(claude_client, transcript, official_data, wire_news)
 
     return {
         "title": title,
@@ -398,8 +490,9 @@ def generate_commentary(claude_client, fmp: FMPClient, symbol: str,
         "model": CLAUDE_MODEL,
         "keyPoints": key_points,
         "transcript": transcript,
-        "newsCount": len(news),
-        "latestClose": latest_close,
+        "filingsCount": len(filings),
+        "pressReleasesCount": len(press_releases),
+        "wireNewsCount": len(wire_news),
     }
 
 
@@ -561,7 +654,7 @@ def main():
         t0 = time.time()
 
         try:
-            result = generate_commentary(claude_client, fmp, sym, mention_date, mention_close)
+            result = generate_commentary(claude_client, fmp, sym)
             elapsed = time.time() - t0
 
             # 寫 DB
@@ -570,7 +663,7 @@ def main():
 
             status_emoji = "✅" if publish else "📝"
             print(f"  {status_emoji} {sym} — {result['title'][:40]}... ({elapsed:.1f}s)")
-            print(f"     KeyPoints: {len(result.get('keyPoints', []))} | News: {result.get('newsCount', 0)} | Price: ${result.get('latestClose', 0):.2f}")
+            print(f"     KeyPoints: {len(result.get('keyPoints', []))} | 8-K: {result.get('filingsCount', 0)} | PR: {result.get('pressReleasesCount', 0)} | Wire: {result.get('wireNewsCount', 0)}")
             succeeded.append(sym)
 
         except Exception as e:

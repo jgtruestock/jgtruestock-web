@@ -340,7 +340,7 @@ export default function GurusPage() {
           <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0, color: '#1A1A1A' }}>
             🧠 大神追蹤 · 統一時間軸
             {items.length > 0 && (
-              <span style={{ fontSize: 12, color: '#888', fontWeight: 400, marginLeft: 12, color: '#999' }}>
+              <span style={{ fontSize: 12, color: '#999', fontWeight: 400, marginLeft: 12 }}>
                 上次更新：{items[0].publishedAt.slice(0, 10)}
               </span>
             )}

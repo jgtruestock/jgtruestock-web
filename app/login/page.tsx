@@ -152,7 +152,7 @@ function LoginContent() {
           onClick={async () => {
             // 先清除舊的 session/state，避免 OAuth state mismatch
             try { await signOut({ redirect: false }); } catch {}
-            signIn('google', { callbackUrl: '/stocks' });
+            signIn('google', { callbackUrl: '/api/auth/post-login' });
           }}
           style={{
             display: 'flex',
