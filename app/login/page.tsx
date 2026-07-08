@@ -168,7 +168,7 @@ function LoginContent() {
         >
           還不是戰友？{' '}
           <a
-            href="https://www.youtube.com/channel/UCu4T9f6HXMM41ACh5ZScXuQ/join"
+            href="https://www.youtube.com/channel/UCzY0ZSJO28AMIByZ640sQag/join"
             target="_blank"
             rel="noopener noreferrer"
             style={{
