@@ -98,7 +98,7 @@ export default function StocksPage() {
                 lineHeight: 1.3,
               }}
             >
-              會員專屬資料庫
+              J派反市場資料庫
               <span style={{ display: 'block', fontSize: 15, fontWeight: 400, color: '#555', fontFamily: "'Noto Sans TC', sans-serif", marginTop: 4, letterSpacing: 0 }}>
                 每天更新最新情報
               </span>
