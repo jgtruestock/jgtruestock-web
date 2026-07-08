@@ -1,8 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { get13fDb } from '@/lib/mongodb';
-import { fetchStockNews } from '@/lib/fmp';
+import { fetchStockNews, fetchSecFilings, fetchPressReleases } from '@/lib/fmp';
 import { upsertStockNews } from '@/lib/db/stockNews';
-import type { JGStockNewsArticle } from '@/types/commentary';
+import { upsertStockFilings } from '@/lib/db/stockFilings';
+import { upsertStockPressReleases } from '@/lib/db/stockPressReleases';
+import type { JGStockNewsArticle, SecFiling, PressRelease } from '@/types/commentary';
+
+// Whitelist for news sources (case-insensitive contains match)
+const NEWS_SOURCE_WHITELIST = [
+  'reuters',
+  'associated press',
+  'ap',
+  'bloomberg',
+  'wall street journal',
+  'wsj',
+  'financial times',
+  'ft',
+  'marketwatch',
+  'pr newswire',
+  'globe newswire',
+  'business wire',
+];
+
+function isWhitelistedSource(site: string): boolean {
+  const lower = site.toLowerCase();
+  return NEWS_SOURCE_WHITELIST.some((s) => lower.includes(s));
+}
 
 // Vercel Cron calls GET; also support POST for manual trigger
 async function handler(req: NextRequest) {
@@ -56,8 +79,11 @@ async function handler(req: NextRequest) {
           try {
             const raw = await fetchStockNews(symbol, 50);
 
+            // Filter to whitelisted sources only
+            const filtered = raw.filter((a) => isWhitelistedSource(a.site || ''));
+
             // Normalise to JGStockNewsArticle shape
-            const articles: JGStockNewsArticle[] = raw.map((a) => ({
+            const articles: JGStockNewsArticle[] = filtered.map((a) => ({
               title: a.title || '',
               url: a.url || '',
               source: a.site || '',
@@ -67,6 +93,29 @@ async function handler(req: NextRequest) {
             }));
 
             await upsertStockNews(symbol, articles);
+
+            // Fetch 8-K filings
+            const rawFilings = await fetchSecFilings(symbol, '8-K', 20);
+            const filings: SecFiling[] = rawFilings.map((f) => ({
+              symbol: f.symbol,
+              fillingDate: f.fillingDate,
+              acceptedDate: f.acceptedDate,
+              type: f.type,
+              link: f.link,
+              finalLink: f.finalLink,
+            }));
+            await upsertStockFilings(symbol, filings);
+
+            // Fetch Press Releases
+            const rawReleases = await fetchPressReleases(symbol, 20);
+            const releases: PressRelease[] = rawReleases.map((r) => ({
+              symbol: r.symbol,
+              date: r.date,
+              title: r.title,
+              text: r.text,
+            }));
+            await upsertStockPressReleases(symbol, releases);
+
             updated++;
           } catch (err) {
             failed++;

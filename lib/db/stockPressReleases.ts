@@ -1,25 +1,25 @@
 import { getJgtDb } from '@/lib/mongodb';
-import type { JGStockFilings8K, SecFiling } from '@/types/commentary';
+import type { JGStockPressReleases, PressRelease } from '@/types/commentary';
 
-export async function getStockFilings(symbol: string): Promise<JGStockFilings8K | null> {
+export async function getStockPressReleases(symbol: string): Promise<JGStockPressReleases | null> {
   const db = await getJgtDb();
   return db
-    .collection<JGStockFilings8K>('stockFilings')
+    .collection<JGStockPressReleases>('stockPressReleases')
     .findOne({ symbol: symbol.toUpperCase() });
 }
 
-export async function upsertStockFilings(
+export async function upsertStockPressReleases(
   symbol: string,
-  filings: SecFiling[]
+  releases: PressRelease[]
 ): Promise<void> {
   const db = await getJgtDb();
   const now = new Date();
-  await db.collection('stockFilings').updateOne(
+  await db.collection('stockPressReleases').updateOne(
     { symbol: symbol.toUpperCase() },
     {
       $set: {
         symbol: symbol.toUpperCase(),
-        filings,
+        releases,
         fetchedAt: now,
         updatedAt: now,
       },

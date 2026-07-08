@@ -122,3 +122,56 @@ export interface NewsAPIResponse {
   articles: JGStockNewsArticle[];
   lastUpdated: string | null;
 }
+
+// ─────────────────────────────────────────────────────────
+// SEC Filings & Press Releases (FMP API response shapes)
+// ─────────────────────────────────────────────────────────
+export interface SecFiling {
+  symbol: string;
+  fillingDate: string;
+  acceptedDate?: string;
+  type: string;
+  link: string;
+  finalLink?: string;
+}
+
+export interface PressRelease {
+  symbol: string;
+  date: string;
+  title: string;
+  text?: string;
+}
+
+// ─────────────────────────────────────────────────────────
+// jg_stock_filings_8k collection  (in "jgtruestock" DB)
+// ─────────────────────────────────────────────────────────
+export interface JGStockFilings8K {
+  symbol: string;
+  filings: SecFiling[];
+  fetchedAt: Date;
+  updatedAt: Date;
+  createdAt: Date;
+}
+
+// ─────────────────────────────────────────────────────────
+// jg_stock_press_releases collection  (in "jgtruestock" DB)
+// ─────────────────────────────────────────────────────────
+export interface JGStockPressReleases {
+  symbol: string;
+  releases: PressRelease[];
+  fetchedAt: Date;
+  updatedAt: Date;
+  createdAt: Date;
+}
+
+export interface FilingsAPIResponse {
+  symbol: string;
+  filings: SecFiling[];
+  lastUpdated: string | null;
+}
+
+export interface PressReleasesAPIResponse {
+  symbol: string;
+  releases: PressRelease[];
+  lastUpdated: string | null;
+}

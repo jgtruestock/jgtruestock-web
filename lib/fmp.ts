@@ -171,6 +171,30 @@ export async function fetchSecFilings(
   }
 }
 
+/**
+ * Fetch recent press releases for a symbol.
+ * FMP endpoint: GET /stable/press-releases?symbol={symbol}&limit={limit}
+ */
+export async function fetchPressReleases(
+  symbol: string,
+  limit = 20
+): Promise<Array<{ symbol: string; date: string; title: string; text?: string }>> {
+  try {
+    const res = await fetch(
+      `${BASE_URL}/press-releases?symbol=${encodeURIComponent(symbol)}&limit=${limit}&apikey=${FMP_API_KEY}`
+    );
+    if (!res.ok) {
+      console.error(`[FMP] fetchPressReleases ${symbol} → HTTP ${res.status}`);
+      return [];
+    }
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
+  } catch (err) {
+    console.error(`[FMP] fetchPressReleases ${symbol} error:`, err);
+    return [];
+  }
+}
+
 export async function getCompanyProfile(symbol: string): Promise<{ name: string; exchange: string } | null> {
   const res = await fetch(
     `${BASE_URL}/profile?symbol=${symbol}&apikey=${FMP_API_KEY}`

@@ -6,9 +6,11 @@ import { authOptions } from '@/lib/auth';
 import { get13fDb, getJgtDb } from '@/lib/mongodb';
 import { getCommentary } from '@/lib/db/commentary';
 import { getStockNews, upsertStockNews } from '@/lib/db/stockNews';
-import { fetchStockNews, fetchEarningsTranscript, EarningsTranscript } from '@/lib/fmp';
+import { getStockFilings, upsertStockFilings } from '@/lib/db/stockFilings';
+import { getStockPressReleases, upsertStockPressReleases } from '@/lib/db/stockPressReleases';
+import { fetchStockNews, fetchEarningsTranscript, fetchSecFilings, fetchPressReleases, EarningsTranscript } from '@/lib/fmp';
 import Navbar from '@/components/Navbar';
-import type { JGStockNewsArticle } from '@/types/commentary';
+import type { JGStockNewsArticle, SecFiling, PressRelease } from '@/types/commentary';
 
 interface StockPageProps {
   params: Promise<{ symbol: string }>;
@@ -101,6 +103,52 @@ async function getOrFetchNews(symbol: string): Promise<JGStockNewsArticle[]> {
       await upsertStockNews(symbol, articles);
     }
     return articles;
+  } catch {
+    return [];
+  }
+}
+
+async function getOrFetchFilings(symbol: string): Promise<SecFiling[]> {
+  try {
+    const cached = await getStockFilings(symbol);
+    if (cached?.filings?.length) return cached.filings;
+
+    const raw = await fetchSecFilings(symbol, '8-K', 20);
+    const filings: SecFiling[] = raw.map((f) => ({
+      symbol: f.symbol,
+      fillingDate: f.fillingDate,
+      acceptedDate: f.acceptedDate,
+      type: f.type,
+      link: f.link,
+      finalLink: f.finalLink,
+    }));
+
+    if (filings.length) {
+      await upsertStockFilings(symbol, filings);
+    }
+    return filings;
+  } catch {
+    return [];
+  }
+}
+
+async function getOrFetchPressReleases(symbol: string): Promise<PressRelease[]> {
+  try {
+    const cached = await getStockPressReleases(symbol);
+    if (cached?.releases?.length) return cached.releases;
+
+    const raw = await fetchPressReleases(symbol, 20);
+    const releases: PressRelease[] = raw.map((r) => ({
+      symbol: r.symbol,
+      date: r.date,
+      title: r.title,
+      text: r.text,
+    }));
+
+    if (releases.length) {
+      await upsertStockPressReleases(symbol, releases);
+    }
+    return releases;
   } catch {
     return [];
   }
@@ -335,7 +383,7 @@ function NewsItem({ article }: { article: JGStockNewsArticle }) {
   );
 }
 
-function NewsFeed({ articles }: { articles: JGStockNewsArticle[] }) {
+function SectionBox({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div
       style={{
@@ -343,6 +391,7 @@ function NewsFeed({ articles }: { articles: JGStockNewsArticle[] }) {
         border: '1px solid #E0DCD6',
         borderRadius: 2,
         padding: '20px 24px',
+        marginBottom: 16,
       }}
     >
       <h2
@@ -356,7 +405,97 @@ function NewsFeed({ articles }: { articles: JGStockNewsArticle[] }) {
           textTransform: 'uppercase',
         }}
       >
-        近 30 天新聞
+        {title}
+      </h2>
+      {children}
+    </div>
+  );
+}
+
+function FilingItem({ filing }: { filing: SecFiling }) {
+  const href = filing.finalLink || filing.link;
+  return (
+    <div style={{ padding: '12px 0', borderBottom: '1px solid #EDEBE6' }}>
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{
+          display: 'block',
+          fontFamily: "'Noto Sans TC', sans-serif",
+          fontSize: 14,
+          color: '#1A1A1A',
+          textDecoration: 'none',
+          lineHeight: 1.5,
+          marginBottom: 4,
+        }}
+        className="news-link"
+      >
+        📑 {filing.type} 申報
+      </a>
+      <div style={{ fontSize: 12, color: '#888' }}>
+        <span
+          style={{
+            display: 'inline-block',
+            background: '#EEE',
+            borderRadius: 3,
+            padding: '1px 6px',
+            marginRight: 6,
+            fontSize: 11,
+          }}
+        >
+          8-K 申報
+        </span>
+        <span>{String(filing.fillingDate).slice(0, 10)}</span>
+      </div>
+    </div>
+  );
+}
+
+function PressReleaseItem({ release }: { release: PressRelease }) {
+  return (
+    <div style={{ padding: '12px 0', borderBottom: '1px solid #EDEBE6' }}>
+      <div
+        style={{
+          fontFamily: "'Noto Sans TC', sans-serif",
+          fontSize: 14,
+          color: '#1A1A1A',
+          lineHeight: 1.5,
+          marginBottom: 4,
+        }}
+      >
+        📢 {release.title}
+      </div>
+      <div style={{ fontSize: 12, color: '#888' }}>
+        <span>{String(release.date).slice(0, 10)}</span>
+      </div>
+    </div>
+  );
+}
+
+function NewsFeed({ articles }: { articles: JGStockNewsArticle[] }) {
+  return (
+    <div
+      style={{
+        background: '#FAFAF8',
+        border: '1px solid #E0DCD6',
+        borderRadius: 2,
+        padding: '20px 24px',
+        marginBottom: 16,
+      }}
+    >
+      <h2
+        style={{
+          fontFamily: "'Noto Serif TC', serif",
+          fontSize: 15,
+          fontWeight: 600,
+          color: '#999',
+          letterSpacing: 1,
+          margin: '0 0 14px',
+          textTransform: 'uppercase',
+        }}
+      >
+        市場報導
       </h2>
 
       {articles.length === 0 ? (
@@ -381,10 +520,12 @@ export default async function StockDetailPage({ params }: StockPageProps) {
   const upperSymbol = symbol.toUpperCase();
 
   // Parallel fetch
-  const [stockInfo, commentary, articles] = await Promise.all([
+  const [stockInfo, commentary, articles, filings, pressReleases] = await Promise.all([
     getStockInfo(upperSymbol),
     getCommentary(upperSymbol),
     getOrFetchNews(upperSymbol),
+    getOrFetchFilings(upperSymbol),
+    getOrFetchPressReleases(upperSymbol),
   ]);
 
   const isPublished =
@@ -411,6 +552,25 @@ export default async function StockDetailPage({ params }: StockPageProps) {
           }
         />
 
+        {/* 📑 重大申報（8-K） */}
+        <SectionBox title="重大申報">
+          {filings.length === 0 ? (
+            <p style={{ fontSize: 14, color: '#AAA', margin: 0 }}>暫無近期重大申報</p>
+          ) : (
+            filings.slice(0, 20).map((f, i) => <FilingItem key={i} filing={f} />)
+          )}
+        </SectionBox>
+
+        {/* 📢 官方公告（Press Release） */}
+        <SectionBox title="官方公告">
+          {pressReleases.length === 0 ? (
+            <p style={{ fontSize: 14, color: '#AAA', margin: 0 }}>暫無近期官方公告</p>
+          ) : (
+            pressReleases.slice(0, 20).map((r, i) => <PressReleaseItem key={i} release={r} />)
+          )}
+        </SectionBox>
+
+        {/* 📰 市場報導（Wire News） */}
         <NewsFeed articles={articles} />
       </div>
 
