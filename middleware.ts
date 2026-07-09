@@ -67,7 +67,8 @@ export async function middleware(req: NextRequest) {
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     if (isAdmin(token)) return NextResponse.next();
-    // Soft launch: any logged-in user can access
+    // Member verification enforced
+    if (!token.isYTMember) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     return NextResponse.next();
   }
 
@@ -82,7 +83,9 @@ export async function middleware(req: NextRequest) {
     if (isAdmin(token)) return NextResponse.next();
 
     // Member verification enforced
-    // Soft launch: any logged-in user can enter
+    if (!token.isYTMember) {
+      return NextResponse.redirect(new URL('/verify', req.url));
+    }
     return NextResponse.next();
   }
 
