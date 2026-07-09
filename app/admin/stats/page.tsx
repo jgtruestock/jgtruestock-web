@@ -127,10 +127,39 @@ export default function AdminStatsPage() {
   );
 }
 
+// ─── Types (verify) ─────────────────────────────────────────────────────────
+
+interface VerifyStats {
+  stats: { totalAttempts: number; successCount: number; failCount: number; unverifiedCount: number };
+  errorDist: { type: string; count: number }[];
+  failures: { email: string; channelUrl: string; errorType: string; createdAt: string }[];
+  unverifiedEmails: string[];
+}
+
 // ─── Tab 1: Overview ──────────────────────────────────────────────────────────
 
 function OverviewTab({ data }: { data: StatsData }) {
   const maxTrend = Math.max(...(data.dailyTrend?.map(d => d.count) ?? [1]), 1);
+  const [verifyDays, setVerifyDays] = useState(1);
+  const [verifyData, setVerifyData] = useState<VerifyStats | null>(null);
+  const [verifyLoading, setVerifyLoading] = useState(false);
+  const [showUnverified, setShowUnverified] = useState(false);
+
+  useEffect(() => {
+    setVerifyLoading(true);
+    fetch(`/api/admin/stats/verify-logs?days=${verifyDays}`)
+      .then(r => r.json())
+      .then(setVerifyData)
+      .finally(() => setVerifyLoading(false));
+  }, [verifyDays]);
+
+  const ERROR_LABEL: Record<string, string> = {
+    not_in_members: '不在名單',
+    channel_not_found: '找不到頻道',
+    already_bound: '頻道已被占用',
+    rate_limited: '速率限制',
+    conflict: '帳號已綁其他頻道',
+  };
 
   return (
     <div>
@@ -168,6 +197,103 @@ function OverviewTab({ data }: { data: StatsData }) {
             })}
           </div>
         )}
+      </div>
+
+      {/* Verify Stats */}
+      <div style={{ ...cardStyle, marginBottom: 24 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+          <h2 style={{ ...sectionTitle, marginBottom: 0 }}>🔐 驗證狀況</h2>
+          <div style={{ display: 'flex', gap: 4 }}>
+            {[1, 7].map(d => (
+              <FilterBtn key={d} active={verifyDays === d} onClick={() => setVerifyDays(d)}>
+                {d === 1 ? '今日' : '7 天'}
+              </FilterBtn>
+            ))}
+          </div>
+        </div>
+
+        {verifyLoading ? (
+          <p style={{ color: '#888', fontSize: 13 }}>載入中...</p>
+        ) : verifyData ? (
+          <>
+            {/* Summary mini-cards */}
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 16 }}>
+              <MiniStatCard label="驗證嘗試" value={verifyData.stats.totalAttempts} />
+              <MiniStatCard label="成功" value={verifyData.stats.successCount} color="#10B981" />
+              <MiniStatCard label="失敗" value={verifyData.stats.failCount} color="#EF4444" />
+              <MiniStatCard
+                label="登入未驗證"
+                value={verifyData.stats.unverifiedCount}
+                color="#F59E0B"
+                onClick={() => setShowUnverified(v => !v)}
+                clickable
+              />
+            </div>
+
+            {/* Error distribution */}
+            {verifyData.errorDist.length > 0 && (
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
+                {verifyData.errorDist.map(e => (
+                  <span key={e.type} style={{
+                    background: '#FEF2F2', color: '#DC2626', border: '1px solid #FECACA',
+                    borderRadius: 4, padding: '3px 8px', fontSize: 12, fontWeight: 600,
+                  }}>
+                    {ERROR_LABEL[e.type] ?? e.type}: {e.count}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* Unverified email list */}
+            {showUnverified && verifyData.unverifiedEmails.length > 0 && (
+              <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 6, padding: 12, marginBottom: 16 }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: '#92400E', marginBottom: 8 }}>
+                  登入未驗證 Email（顕示 {verifyData.unverifiedEmails.length} 筆）
+                </div>
+                <div style={{ fontSize: 11, color: '#78350F', lineHeight: 1.8 }}>
+                  {verifyData.unverifiedEmails.join('  ·  ')}
+                </div>
+              </div>
+            )}
+
+            {/* Failure table */}
+            {verifyData.failures.length > 0 && (
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                  <thead>
+                    <tr style={{ background: '#1A1A1A', color: '#FFF' }}>
+                      <th style={th}>時間</th>
+                      <th style={th}>Email</th>
+                      <th style={th}>頻道網址</th>
+                      <th style={th}>失敗原因</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {verifyData.failures.map((f, i) => (
+                      <tr key={i} style={{ background: i % 2 === 0 ? '#FFF' : '#F9F9F9' }}>
+                        <td style={{ ...td, whiteSpace: 'nowrap', fontSize: 11 }}>{fmtTime(f.createdAt)}</td>
+                        <td style={{ ...td, maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.email}</td>
+                        <td style={{ ...td, maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#555', fontSize: 11 }}>{f.channelUrl}</td>
+                        <td style={td}>
+                          <span style={{
+                            background: '#FEF2F2', color: '#DC2626', border: '1px solid #FECACA',
+                            borderRadius: 4, padding: '2px 6px', fontSize: 11, fontWeight: 600,
+                          }}>
+                            {ERROR_LABEL[f.errorType] ?? f.errorType}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {verifyData.failures.length === 0 && (
+              <p style={{ color: '#888', fontSize: 13, margin: 0 }}>未有失敗記錄</p>
+            )}
+          </>
+        ) : null}
       </div>
 
       {/* Recent Logins */}
@@ -553,6 +679,22 @@ function FeedbackTab() {
 }
 
 // ─── Shared Components ────────────────────────────────────────────────────────
+
+function MiniStatCard({ label, value, color, onClick, clickable }: { label: string; value: number; color?: string; onClick?: () => void; clickable?: boolean }) {
+  return (
+    <div
+      onClick={onClick}
+      style={{
+        background: '#FFF', border: `1px solid ${color ? color + '44' : '#E0E0E0'}`, borderRadius: 6,
+        padding: '10px 16px', cursor: clickable ? 'pointer' : 'default',
+        display: 'flex', flexDirection: 'column', gap: 2,
+      }}
+    >
+      <div style={{ fontSize: 11, color: '#888' }}>{label}{clickable ? ' ▾' : ''}</div>
+      <div style={{ fontSize: 22, fontWeight: 700, color: color ?? '#1A1A1A' }}>{value.toLocaleString()}</div>
+    </div>
+  );
+}
 
 function StatCard({ title, value, subtitle }: { title: string; value: number; subtitle: string }) {
   return (
