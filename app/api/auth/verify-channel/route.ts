@@ -14,9 +14,14 @@ function parseChannelUrl(input: string): { type: 'handle' | 'channelId' | 'unkno
     return { type: 'channelId', value: trimmed };
   }
 
-  // Direct @handle
+  // Helper: decode URL-encoded handle safely
+  function decodeHandle(raw: string): string {
+    try { return decodeURIComponent(raw); } catch { return raw; }
+  }
+
+  // Direct @handle (may contain URL-encoded Chinese)
   if (trimmed.startsWith('@')) {
-    return { type: 'handle', value: trimmed.slice(1) };
+    return { type: 'handle', value: decodeHandle(trimmed.slice(1)) };
   }
 
   try {
@@ -26,17 +31,17 @@ function parseChannelUrl(input: string): { type: 'handle' | 'channelId' | 'unkno
     const channelMatch = url.pathname.match(/^\/channel\/(UC[\w-]{22})/);
     if (channelMatch) return { type: 'channelId', value: channelMatch[1] };
 
-    // youtube.com/@handle
-    const handleMatch = url.pathname.match(/^\/@([\w.-]+)/);
-    if (handleMatch) return { type: 'handle', value: handleMatch[1] };
+    // youtube.com/@handle — allow any char including encoded Chinese
+    const handleMatch = url.pathname.match(/^\/@([^/]+)/);
+    if (handleMatch) return { type: 'handle', value: decodeHandle(handleMatch[1]) };
 
     // youtube.com/c/customname or youtube.com/user/username
-    const customMatch = url.pathname.match(/^\/(?:c|user)\/([\w.-]+)/);
-    if (customMatch) return { type: 'handle', value: customMatch[1] };
+    const customMatch = url.pathname.match(/^\/(?:c|user)\/([^/]+)/);
+    if (customMatch) return { type: 'handle', value: decodeHandle(customMatch[1]) };
 
   } catch {
     // Not a URL, treat as handle
-    return { type: 'handle', value: trimmed };
+    return { type: 'handle', value: decodeHandle(trimmed) };
   }
 
   return { type: 'unknown', value: trimmed };

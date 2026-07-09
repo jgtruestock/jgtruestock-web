@@ -215,7 +215,11 @@ export default function VerifyPage() {
               <input
                 type="text"
                 value={channelUrl}
-                onChange={(e) => setChannelUrl(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  try { setChannelUrl(decodeURIComponent(val)); }
+                  catch { setChannelUrl(val); }
+                }}
                 onFocus={() => setInputFocused(true)}
                 onBlur={() => setInputFocused(false)}
                 placeholder="貼上你的頻道連結，例如：youtube.com/@yourname 或 @yourname"
