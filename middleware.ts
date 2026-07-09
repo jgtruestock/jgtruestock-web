@@ -8,8 +8,8 @@ function isAdmin(token: any): boolean {
   if (!token) return false;
   // Discord login
   if (token.provider === 'discord' && token.sub === ADMIN_DISCORD_ID) return true;
-  // Google login with admin email
-  if (token.provider === 'google' && token.email === ADMIN_EMAIL) return true;
+  // Google login with admin email — check email directly (provider may not always be set)
+  if (token.email && token.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) return true;
   return false;
 }
 
