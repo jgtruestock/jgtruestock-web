@@ -64,7 +64,8 @@ export async function middleware(req: NextRequest) {
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     if (isAdmin(token)) return NextResponse.next();
-    // Member verification enforced
+    // Soft launch: any logged-in user can access APIs
+    if (token.provider === 'google') return NextResponse.next();
     if (!token.isYTMember) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     return NextResponse.next();
   }
@@ -79,12 +80,8 @@ export async function middleware(req: NextRequest) {
     // Admin → always allow (Discord or Google admin email)
     if (isAdmin(token)) return NextResponse.next();
 
-    // Member verification enforced: Google user must have verified YT membership
-    if (token.provider === 'google' && !isAdmin(token)) {
-      if (!token.isYTMember) {
-        return NextResponse.redirect(new URL('/verify', req.url));
-      }
-    }
+    // Soft launch: any logged-in Google user can enter (YT binding verification bypassed)
+    if (token.provider === 'google') return NextResponse.next();
 
     return NextResponse.next();
   }
