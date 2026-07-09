@@ -4,6 +4,7 @@
     { "path": "/api/cron/update-prices", "schedule": "30 21 * * *" },
     { "path": "/api/cron/update-news", "schedule": "0 23 * * *" },
     { "path": "/api/cron/update-gurus", "schedule": "0 1 * * *" },
-    { "path": "/api/cron/check-earnings", "schedule": "0 3 * * 1" }
+    { "path": "/api/cron/check-earnings", "schedule": "0 3 * * 1" },
+    { "path": "/api/cron/refresh-commentary", "schedule": "30 23 * * *" }
   ]
 }
