@@ -293,6 +293,28 @@ export async function getUserActivity(opts: { email: string; page: number; pageS
   };
 }
 
+// 取得某個 email 每日登入次數（過去 N 天）
+export async function getUserDailyLogins(email: string, days: number = 30): Promise<{ date: string; count: number }[]> {
+  const db = await getJgtDb();
+  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+  const emailRegex = new RegExp(`^${email.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i');
+  const pipeline = [
+    { $match: { email: emailRegex, createdAt: { $gte: since } } },
+    {
+      $group: {
+        _id: {
+          $dateToString: { format: '%Y-%m-%d', date: '$createdAt', timezone: 'Asia/Taipei' }
+        },
+        count: { $sum: 1 }
+      }
+    },
+    { $sort: { _id: -1 } },
+    { $limit: days },
+  ];
+  const results = await db.collection('jg_login_logs').aggregate(pipeline).toArray();
+  return results.map(r => ({ date: r._id as string, count: r.count as number }));
+}
+
 // Get top stock for each email
 export async function getTopStockPerEmail(
   emails: string[]

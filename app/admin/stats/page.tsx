@@ -419,6 +419,32 @@ function UserTrackerTab() {
             </div>
           </div>
 
+          {/* Daily Login Breakdown */}
+          <div style={{ ...cardStyle, marginBottom: 20 }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: '#333', marginBottom: 8 }}>
+              每日登入次數（近 30 天）
+            </div>
+            {(data as any).dailyLogins?.length > 0 ? (
+              (data as any).dailyLogins.map((d: { date: string; count: number }) => {
+                const maxCount = Math.max(...(data as any).dailyLogins.map((x: any) => x.count));
+                const pct = (d.count / maxCount) * 100;
+                return (
+                  <div key={d.date} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                    <span style={{ fontSize: 11, color: '#999', width: 44, flexShrink: 0 }}>
+                      {d.date.slice(5).replace('-', '/')}
+                    </span>
+                    <div style={{ flex: 1, background: '#f0f0f0', height: 12, borderRadius: 2, position: 'relative' }}>
+                      <div style={{ width: `${pct}%`, background: '#cc1a22', height: '100%', borderRadius: 2 }} />
+                    </div>
+                    <span style={{ fontSize: 11, color: '#555', width: 20, textAlign: 'right' }}>{d.count}</span>
+                  </div>
+                );
+              })
+            ) : (
+              <div style={{ fontSize: 12, color: '#aaa' }}>無登入記錄</div>
+            )}
+          </div>
+
           {/* Events Table */}
           <div style={cardStyle}>
             <h2 style={sectionTitle}>行為歷史（共 {data.total} 筆）</h2>

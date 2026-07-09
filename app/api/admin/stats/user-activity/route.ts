@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions, isAdminSession } from '@/lib/auth';
-import { getUserActivity } from '@/lib/db/activityLogs';
+import { getUserActivity, getUserDailyLogins } from '@/lib/db/activityLogs';
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -12,5 +12,6 @@ export async function GET(req: NextRequest) {
   const page = Math.max(1, Number(searchParams.get('page') || 1));
   const pageSize = Math.min(50, Number(searchParams.get('pageSize') || 30));
   const result = await getUserActivity({ email, page, pageSize });
-  return NextResponse.json(result);
+  const dailyLogins = await getUserDailyLogins(email, 30);
+  return NextResponse.json({ ...result, dailyLogins });
 }
