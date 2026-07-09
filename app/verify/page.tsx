@@ -48,29 +48,7 @@ export default function VerifyPage() {
     <>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700&family=Noto+Sans+TC:wght@400;500;600&display=swap');
-        .step-grid {
-          display: grid;
-          grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr;
-          gap: 6px;
-          align-items: center;
-        }
-        .step-arrow {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: #555;
-          font-size: 16px;
-          padding: 0 2px;
-        }
-        @media (max-width: 600px) {
-          .step-grid {
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-          }
-          .step-arrow {
-            display: none;
-          }
-        }
+
       `}</style>
       <div
         style={{
@@ -155,112 +133,101 @@ export default function VerifyPage() {
                   請貼上你的 YouTube 頻道連結
                 </h2>
 
-                {/* Steps - 4-step visual guide */}
-                <div
-                  style={{
-                    background: '#1a1a1a',
-                    border: '1px solid #2a2a2a',
-                    borderRadius: 8,
-                    padding: '14px 12px 10px',
-                    marginBottom: 20,
-                  }}
-                >
-                  <p
-                    style={{
-                      fontSize: 14,
-                      fontWeight: 700,
-                      color: '#e0e0e0',
-                      marginBottom: 12,
-                      textAlign: 'center',
-                    }}
-                  >
+                {/* Steps - text list with icons */}
+                <div style={{ marginBottom: 24 }}>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: '#e0e0e0', marginBottom: 12 }}>
                     怎麼找到我的頻道連結？
                   </p>
-
-                  <div className="step-grid">
-                    {/* Step 1 */}
+                  {([
+                    {
+                      text: '打開 YouTube App 或網頁',
+                      icon: (
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                          <rect width="18" height="18" rx="4" fill="#CC0000" />
+                          <polygon points="7,5 14,9 7,13" fill="white" />
+                        </svg>
+                      ),
+                    },
+                    {
+                      text: '點右上角你的頭像',
+                      icon: (
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#c9a84c" strokeWidth="1.5">
+                          <circle cx="9" cy="7" r="3" />
+                          <path d="M3 16c0-3.314 2.686-6 6-6s6 2.686 6 6" strokeLinecap="round" />
+                        </svg>
+                      ),
+                    },
+                    {
+                      text: '點「查看頻道」（或「瀏覽頻道」）',
+                      icon: (
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#c9a84c" strokeWidth="1.5">
+                          <rect x="1" y="2" width="16" height="11" rx="1.5" />
+                          <line x1="6" y1="16" x2="12" y2="16" strokeLinecap="round" />
+                          <line x1="9" y1="13" x2="9" y2="16" />
+                        </svg>
+                      ),
+                      highlight: true,
+                    },
+                    {
+                      text: '複製網址列的連結',
+                      icon: (
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#c9a84c" strokeWidth="1.5">
+                          <rect x="6" y="1" width="10" height="12" rx="1.5" />
+                          <rect x="2" y="5" width="10" height="12" rx="1.5" fill="oklch(0.22 0.01 65)" />
+                          <rect x="2" y="5" width="10" height="12" rx="1.5" />
+                        </svg>
+                      ),
+                    },
+                    {
+                      text: '貼到下方輸入框',
+                      icon: (
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#c9a84c" strokeWidth="1.5">
+                          <rect x="1" y="7" width="16" height="10" rx="1.5" />
+                          <path d="M6 7V4a3 3 0 0 1 6 0v3" strokeLinecap="round" />
+                          <line x1="9" y1="11" x2="9" y2="13" strokeLinecap="round" />
+                        </svg>
+                      ),
+                    },
+                  ] as { text: string; icon: React.ReactNode; highlight?: boolean }[]).map((step, i) => (
                     <div
+                      key={i}
                       style={{
-                        background: '#222',
-                        borderRadius: 6,
-                        padding: 12,
-                        textAlign: 'center',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 10,
+                        marginBottom: 10,
                       }}
                     >
-                      <svg width="32" height="32" viewBox="0 0 32 32" fill="none" style={{ margin: '0 auto 6px' }}>
-                        <rect width="32" height="32" rx="6" fill="#CC0000" />
-                        <polygon points="12,9 25,16 12,23" fill="white" />
-                      </svg>
-                      <div style={{ fontSize: 12, color: '#aaa', lineHeight: 1.4 }}>打開 YouTube</div>
+                      <span
+                        style={{
+                          flexShrink: 0,
+                          width: 22,
+                          height: 22,
+                          borderRadius: '50%',
+                          background: 'oklch(0.28 0.01 65)',
+                          color: '#c9a84c',
+                          fontSize: 12,
+                          fontWeight: 700,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        {i + 1}
+                      </span>
+                      <span style={{ flexShrink: 0, display: 'flex', alignItems: 'center' }}>{step.icon}</span>
+                      <span
+                        style={{
+                          fontSize: 13,
+                          color: step.highlight ? '#c9a84c' : 'oklch(0.65 0.01 65)',
+                          fontWeight: step.highlight ? 600 : 400,
+                          lineHeight: 1.7,
+                        }}
+                      >
+                        {step.text}
+                      </span>
                     </div>
-
-                    {/* Arrow 1 */}
-                    <div className="step-arrow">→</div>
-
-                    {/* Step 2 */}
-                    <div
-                      style={{
-                        background: '#222',
-                        borderRadius: 6,
-                        padding: 12,
-                        textAlign: 'center',
-                      }}
-                    >
-                      <svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="#c9a84c" strokeWidth="1.8" style={{ margin: '0 auto 6px', display: 'block' }}>
-                        <circle cx="16" cy="12" r="5" />
-                        <path d="M6 26c0-5.523 4.477-10 10-10s10 4.477 10 10" strokeLinecap="round" />
-                      </svg>
-                      <div style={{ fontSize: 12, color: '#aaa', lineHeight: 1.4 }}>點右上角頭像</div>
-                    </div>
-
-                    {/* Arrow 2 */}
-                    <div className="step-arrow">→</div>
-
-                    {/* Step 3 - highlighted */}
-                    <div
-                      style={{
-                        background: '#222',
-                        borderRadius: 6,
-                        padding: 12,
-                        textAlign: 'center',
-                        border: '1px solid #c9a84c',
-                      }}
-                    >
-                      <svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="#c9a84c" strokeWidth="1.8" style={{ margin: '0 auto 6px', display: 'block' }}>
-                        <rect x="3" y="5" width="26" height="18" rx="2" />
-                        <line x1="12" y1="27" x2="20" y2="27" strokeLinecap="round" />
-                        <line x1="16" y1="23" x2="16" y2="27" />
-                        <rect x="7" y="9" width="10" height="10" rx="1" fill="#c9a84c" opacity="0.3" />
-                      </svg>
-                      <div style={{ fontSize: 12, color: '#c9a84c', lineHeight: 1.4, fontWeight: 600 }}>點「查看頻道」<br />或「瀏覽頻道」</div>
-                    </div>
-
-                    {/* Arrow 3 */}
-                    <div className="step-arrow">→</div>
-
-                    {/* Step 4 */}
-                    <div
-                      style={{
-                        background: '#222',
-                        borderRadius: 6,
-                        padding: 12,
-                        textAlign: 'center',
-                      }}
-                    >
-                      <svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="#c9a84c" strokeWidth="1.8" style={{ margin: '0 auto 6px', display: 'block' }}>
-                        <path d="M13 19l-5-5 5-5" strokeLinecap="round" strokeLinejoin="round" />
-                        <path d="M8 14h11a5 5 0 0 1 0 10h-2" strokeLinecap="round" />
-                        <rect x="14" y="8" width="14" height="10" rx="2" />
-                        <line x1="17" y1="11" x2="25" y2="11" strokeLinecap="round" />
-                        <line x1="17" y1="14" x2="23" y2="14" strokeLinecap="round" />
-                      </svg>
-                      <div style={{ fontSize: 12, color: '#aaa', lineHeight: 1.4 }}>複製網址<br />貼到下方</div>
-                    </div>
-                  </div>
-
-                  <p style={{ fontSize: 13, color: '#c9a84c', textAlign: 'center', marginTop: 10, marginBottom: 0 }}>
-                    連結通常長這樣：youtube.com/@yourname
-                  </p>
+                  ))}
                 </div>
 
                 {/* Example */}
