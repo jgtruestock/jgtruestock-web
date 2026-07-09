@@ -84,10 +84,7 @@ export async function middleware(req: NextRequest) {
     if (isAdmin(token)) return NextResponse.next();
 
     // Member verification enforced
-    if (!token.isYTMember) {
-      return NextResponse.redirect(new URL('/verify', req.url));
-    }
-
+    // Soft launch: any logged-in user can enter
     return NextResponse.next();
   }
 
