@@ -68,7 +68,15 @@ export async function GET(req: NextRequest) {
       symbol: rec.symbol as string,
       companyName: (rec.companyName as string) || (rec.name as string) || (rec.symbol as string),
       exchange: (rec.exchange as string) || 'US',
-      mentionDate: rec.mentionDate as string,
+      mentionDate: (() => {
+        const d = rec.mentionDate;
+        if (!d) return '';
+        if (d instanceof Date) return (d as Date).toISOString().slice(0, 10);
+        const s = String(d);
+        // ISO string "2026-07-02T..." → slice to 10
+        if (s.length >= 10 && s[4] === '-') return s.slice(0, 10);
+        return s;
+      })(),
       priceAtMention: (rec.mentionClose as number) || 0,
       currentPrice: (rec.latestClose as number) || 0,
       gainPct: (rec.performancePct as number) || 0,

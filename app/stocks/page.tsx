@@ -100,9 +100,9 @@ export default function StocksPage() {
                 lineHeight: 1.3,
               }}
             >
-              J派反市場資料庫
-              <span style={{ display: 'block', fontSize: 15, fontWeight: 400, color: '#555', fontFamily: "'Noto Sans TC', sans-serif", marginTop: 4, letterSpacing: 0 }}>
-                每天更新最新情報
+              會員專屬資料庫
+              <span style={{ display: 'block', fontSize: 13, fontWeight: 400, color: '#555', fontFamily: "'Noto Sans TC', sans-serif", marginTop: 4, letterSpacing: 0, maxWidth: 560, lineHeight: 1.6 }}>
+                這裡不是新聞列表，而是 JG 每天用來追蹤市場錯價、產業轉折與下一輪機會的研究入口
               </span>
             </h1>
           </div>
