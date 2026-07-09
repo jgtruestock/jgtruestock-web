@@ -27,10 +27,8 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // /verify — 綁定頁，已登入才能進，不需要 isYTMember
+  // /verify — 過渡頁（舊驗證流程），現在是公開頁面，不擋
   if (pathname.startsWith('/verify')) {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
-    if (!token) return NextResponse.redirect(new URL('/login', req.url));
     return NextResponse.next();
   }
 
@@ -83,7 +81,7 @@ export async function middleware(req: NextRequest) {
     // Member verification enforced
     if (isAdmin(token)) return NextResponse.next();
     if (token.provider === 'google' && !token.isYTMember) {
-      return NextResponse.redirect(new URL('/verify', req.url));
+      return NextResponse.redirect(new URL('/not-member', req.url));
     }
 
     return NextResponse.next();

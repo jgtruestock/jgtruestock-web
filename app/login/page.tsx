@@ -95,14 +95,21 @@ function LoginContent() {
             fontSize: 14,
             color: 'oklch(0.55 0.01 65)',
             lineHeight: 1.8,
+            marginBottom: 12,
+          }}
+        >
+          請用你在 JG 頻道加入會員的 Google 帳號登入
+        </p>
+        <p
+          style={{
+            fontFamily: "'Noto Sans TC', sans-serif",
+            fontSize: 12,
+            color: 'oklch(0.42 0.01 65)',
+            lineHeight: 1.7,
             marginBottom: 40,
           }}
         >
-          限會員頻道專屬
-          <br />
-          這裡是我們的專屬筆記
-          <br />
-          跟上暴漲暴跌的變化
+          系統會自動確認你的會員資格，不需要額外步驟
         </p>
 
         {/* WebView warning */}

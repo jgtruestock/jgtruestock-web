@@ -3,6 +3,24 @@ import DiscordProvider from 'next-auth/providers/discord';
 import GoogleProvider from 'next-auth/providers/google';
 import { getJgtDb } from './mongodb';
 
+async function fetchYouTubeChannelId(
+  accessToken: string
+): Promise<{ channelId: string; channelName: string } | null> {
+  try {
+    const res = await fetch(
+      'https://www.googleapis.com/youtube/v3/channels?part=id,snippet&mine=true',
+      { headers: { Authorization: `Bearer ${accessToken}` } }
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data.items?.length) return null;
+    return {
+      channelId: data.items[0].id,
+      channelName: data.items[0].snippet?.title ?? '',
+    };
+  } catch { return null; }
+}
+
 export const ADMIN_DISCORD_ID = process.env.ADMIN_DISCORD_ID || '';
 
 export const authOptions: NextAuthOptions = {
@@ -16,7 +34,7 @@ export const authOptions: NextAuthOptions = {
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
       authorization: {
         params: {
-          scope: 'openid email profile',
+          scope: 'openid email profile https://www.googleapis.com/auth/youtube.readonly',
           access_type: 'offline',
           prompt: 'consent',
         },
@@ -61,8 +79,41 @@ export const authOptions: NextAuthOptions = {
               } else {
                 token.memberExpired = true; // 曾是會員但名單已移除
               }
+            } else if (account?.access_token) {
+              // 首次登入 → 自動取 YouTube channel ID
+              const ytChannel = await fetchYouTubeChannelId(account.access_token);
+              if (ytChannel) {
+                // 檢查是否已被其他帳號綁定
+                const existingBinding = await db.collection('user_bindings')
+                  .findOne({ channelId: ytChannel.channelId });
+
+                if (existingBinding && existingBinding.email !== email) {
+                  token.channelConflict = true;
+                } else {
+                  const member = await db.collection('yt_members')
+                    .findOne({ channelId: ytChannel.channelId });
+
+                  if (member) {
+                    // 自動綁定！
+                    if (!existingBinding) {
+                      await db.collection('user_bindings').insertOne({
+                        email,
+                        channelId: ytChannel.channelId,
+                        channelUrl: `https://www.youtube.com/channel/${ytChannel.channelId}`,
+                        boundAt: new Date(),
+                        verifiedBy: 'oauth-auto',
+                      });
+                    }
+                    token.isYTMember = true;
+                    token.channelId = ytChannel.channelId;
+                  }
+                  // 不是會員 → isYTMember 維持 false
+                }
+              } else {
+                token.noYouTubeChannel = true;
+              }
             } else {
-              token.needsBinding = true; // 從未綁定，導到 /verify
+              token.needsBinding = true; // 沒有 access_token（不應發生）
             }
           } catch (err) {
             console.error('auth binding lookup error:', err);
