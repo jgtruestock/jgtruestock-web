@@ -199,7 +199,7 @@ export default function StocksPage() {
             >
               <thead>
                 <tr>
-                  {['代號', '公司名稱', '次數', '提到日期', '當時股價', '今日股價', '漲幅', ''].map(
+                  {['代號', '公司名稱', '次數', '提到日期', '當時股價', '今日股價', '漲幅', '最新動態', ''].map(
                     (h, i) => (
                       <th
                         key={i}
@@ -331,6 +331,21 @@ export default function StocksPage() {
                       >
                         {gain.label}
                       </td>
+                      <td style={{ padding: '10px 8px', whiteSpace: 'nowrap' }}>
+                        {rec.lastUpdatedAt ? (
+                          <span style={{
+                            fontFamily: "'Raleway', sans-serif",
+                            fontSize: 11,
+                            fontWeight: 600,
+                            color: '#c9a84c',
+                            letterSpacing: '0.5px',
+                          }}>
+                            {rec.lastUpdatedAt.slice(5).replace('-', '/')}
+                          </span>
+                        ) : (
+                          <span style={{ fontSize: 11, color: '#ccc' }}>—</span>
+                        )}
+                      </td>
                       <td
                         style={{
                           padding: '6px 8px',
@@ -449,10 +464,23 @@ export default function StocksPage() {
                         marginTop: 3,
                         paddingLeft: 2,
                         fontVariantNumeric: 'tabular-nums',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 6,
                       }}
                     >
-                      {rec.companyName} · ${rec.priceAtMention.toFixed(2)} → $
-                      {rec.currentPrice.toFixed(2)}
+                      <span>{rec.companyName} · ${rec.priceAtMention.toFixed(2)} → ${rec.currentPrice.toFixed(2)}</span>
+                      {rec.lastUpdatedAt && (
+                        <span style={{
+                          fontFamily: "'Raleway', sans-serif",
+                          fontSize: 10,
+                          fontWeight: 600,
+                          color: '#c9a84c',
+                          letterSpacing: '0.5px',
+                        }}>
+                          · {rec.lastUpdatedAt.slice(5).replace('-', '/')}
+                        </span>
+                      )}
                     </div>
                   </div>
                 );
