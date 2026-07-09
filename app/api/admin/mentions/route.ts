@@ -52,26 +52,51 @@ export async function POST(req: NextRequest) {
     const db = await getJgtDb();
     const now = new Date();
 
-    const doc = {
-      symbol: upperSymbol,
-      companyName,
-      exchange,
-      mentionDate: mentionDate,  // 統一存 ISO 字串 "YYYY-MM-DD"
-      priceAtMention,
-      currentPrice,
-      gainPct,
-      source: source || '',
-      createdAt: now,
-      updatedAt: now,
-    };
+    // 檢查是否已存在
+    const existing = await db.collection('jg_mention_history').findOne({ symbol: upperSymbol });
 
-    const result = await db.collection('jg_mention_history').insertOne(doc);
-
-    return NextResponse.json({
-      success: true,
-      id: result.insertedId.toString(),
-      record: { ...doc, _id: result.insertedId.toString() },
-    });
+    if (existing) {
+      // 已存在：只累加次數，更新當前股價和漲幅，不動 mentionDate 和 priceAtMention
+      await db.collection('jg_mention_history').updateOne(
+        { symbol: upperSymbol },
+        {
+          $inc: { mentionCount: 1 },
+          $set: {
+            currentPrice,
+            gainPct,
+            updatedAt: now,
+          },
+        }
+      );
+      const updated = await db.collection('jg_mention_history').findOne({ symbol: upperSymbol });
+      return NextResponse.json({
+        success: true,
+        id: existing._id.toString(),
+        record: { ...updated, _id: updated!._id.toString() },
+        alreadyExists: true,
+      });
+    } else {
+      // 第一次：新增，mentionCount 從 1 開始
+      const doc = {
+        symbol: upperSymbol,
+        companyName,
+        exchange,
+        mentionDate: mentionDate,  // 統一存 ISO 字串 "YYYY-MM-DD"
+        priceAtMention,
+        currentPrice,
+        gainPct,
+        source: source || '',
+        mentionCount: 1,
+        createdAt: now,
+        updatedAt: now,
+      };
+      const result = await db.collection('jg_mention_history').insertOne(doc);
+      return NextResponse.json({
+        success: true,
+        id: result.insertedId.toString(),
+        record: { ...doc, _id: result.insertedId.toString() },
+      });
+    }
   } catch (err) {
     console.error('POST /api/admin/mentions error:', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

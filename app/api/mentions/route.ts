@@ -40,24 +40,42 @@ export async function GET(req: NextRequest) {
 
     // 合併 jgtruestock DB 的 jg_mention_history
     const jgtDb = await getJgtDb();
-    const mentionHistory = await jgtDb.collection('jg_mention_history').find({}).toArray();
+    // 先按 mentionDate 升序排列，確保最早的先處理
+    const mentionHistory = await jgtDb
+      .collection('jg_mention_history')
+      .find({})
+      .sort({ mentionDate: 1, createdAt: 1 })
+      .toArray();
+
+    // 用 Map 整合同 symbol 的多筆（保留最早的日期/價格，加總次數）
+    const mentionMap: Record<string, any> = {};
     for (const item of mentionHistory) {
       const sym = item.symbol as string;
-      if (sym) {
-        symbolMap[sym] = {
-          ...symbolMap[sym],
-          _id: item._id,
-          symbol: sym,
-          name: item.companyName || sym,
-          exchange: item.exchange || (symbolMap[sym]?.exchange as string) || 'US',
-          mentionDate: item.mentionDate || (symbolMap[sym]?.mentionDate as string),
-          mentionClose: item.priceAtMention ?? (symbolMap[sym]?.mentionClose as number),
-          latestClose: item.currentPrice ?? (symbolMap[sym]?.latestClose as number),
-          performancePct: item.gainPct ?? (symbolMap[sym]?.performancePct as number),
-          source: item.source || (symbolMap[sym]?.source as string) || 'jg-mention',
-          _fromMentionHistory: true,
-        };
+      if (!sym) continue;
+      if (!mentionMap[sym]) {
+        mentionMap[sym] = { ...item, mentionCount: item.mentionCount || 1 };
+      } else {
+        // 已存在：保留最早的，只加次數
+        mentionMap[sym].mentionCount = (mentionMap[sym].mentionCount || 1) + (item.mentionCount || 1);
       }
+    }
+
+    for (const item of Object.values(mentionMap)) {
+      const sym = item.symbol as string;
+      symbolMap[sym] = {
+        ...symbolMap[sym],
+        _id: item._id,
+        symbol: sym,
+        name: item.companyName || sym,
+        exchange: item.exchange || (symbolMap[sym]?.exchange as string) || 'US',
+        mentionDate: item.mentionDate || (symbolMap[sym]?.mentionDate as string),
+        mentionClose: item.priceAtMention ?? (symbolMap[sym]?.mentionClose as number),
+        latestClose: item.currentPrice ?? (symbolMap[sym]?.latestClose as number),
+        performancePct: item.gainPct ?? (symbolMap[sym]?.performancePct as number),
+        source: item.source || (symbolMap[sym]?.source as string) || 'jg-mention',
+        mentionCount: item.mentionCount || 1,
+        _fromMentionHistory: true,
+      };
     }
 
     const allRecords = Object.values(symbolMap);
@@ -81,7 +99,7 @@ export async function GET(req: NextRequest) {
       currentPrice: (rec.latestClose as number) || 0,
       gainPct: (rec.performancePct as number) || 0,
       source: (rec.source as string) || 'member-channel',
-      mentionCount: 1,
+      mentionCount: (rec.mentionCount as number) || 1,
       _fromMentionHistory: (rec._fromMentionHistory as boolean) || false,
     }));
 
