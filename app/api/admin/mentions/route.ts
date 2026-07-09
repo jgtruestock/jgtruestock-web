@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
       symbol: upperSymbol,
       companyName,
       exchange,
-      mentionDate: new Date(mentionDate),
+      mentionDate: mentionDate,  // 統一存 ISO 字串 "YYYY-MM-DD"
       priceAtMention,
       currentPrice,
       gainPct,
