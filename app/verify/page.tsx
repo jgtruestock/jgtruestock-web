@@ -11,6 +11,9 @@ export default function VerifyPage() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
+  const [inputFocused, setInputFocused] = useState(false);
+  const [btnHover, setBtnHover] = useState(false);
+  const [logoutHover, setLogoutHover] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -41,40 +44,108 @@ export default function VerifyPage() {
     }
   }
 
+  const steps = [
+    '打開 YouTube（手機或電腦）',
+    '點右上角的頭像 / 大頭照',
+    '點「查看頻道」',
+    '複製網址列的連結，貼到下面的輸入框',
+  ];
+
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        {/* Logo / Brand */}
-        <div className="text-center mb-8">
-          <div
-            className="inline-block text-3xl font-bold mb-2"
-            style={{ color: '#cc1a22' }}
-          >
-            JG TrueStock
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Raleway:wght@400;600;700&family=Noto+Serif+TC:wght@400;700&family=Noto+Sans+TC:wght@400;500;600&display=swap');
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        .spin { animation: spin 0.8s linear infinite; }
+      `}</style>
+      <div
+        style={{
+          minHeight: '100vh',
+          backgroundColor: '#0f0f0f',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '40px 16px',
+          fontFamily: "'Noto Sans TC', sans-serif",
+        }}
+      >
+        <div style={{ width: '100%', maxWidth: 480 }}>
+
+          {/* Brand Header */}
+          <div style={{ textAlign: 'center', marginBottom: 32 }}>
+            <div
+              style={{
+                fontFamily: "'Raleway', sans-serif",
+                color: '#c9a84c',
+                fontSize: 9,
+                letterSpacing: '3px',
+                textTransform: 'uppercase',
+                marginBottom: 10,
+              }}
+            >
+              MEMBER VERIFICATION
+            </div>
+            <h1
+              style={{
+                fontFamily: "'Noto Serif TC', serif",
+                color: '#cc1a22',
+                fontSize: 22,
+                fontWeight: 700,
+                margin: '0 0 8px 0',
+              }}
+            >
+              確認你的頻道會員身份
+            </h1>
+            <p
+              style={{
+                color: '#888',
+                fontSize: 14,
+                margin: 0,
+                lineHeight: 1.6,
+              }}
+            >
+              貼上你的 YouTube 頻道連結，系統自動確認你是否為頻道會員
+            </p>
           </div>
-          <p className="text-gray-500 text-sm">頻道會員專屬平台</p>
-        </div>
 
-        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-8">
-          <h1 className="text-xl font-semibold text-gray-900 mb-2">
-            確認你的頻道會員身份
-          </h1>
-          <p className="text-gray-500 text-sm mb-4">
-            貼上你的 YouTube 頻道連結，系統會自動確認你是否為頻道會員
-          </p>
-
-          {/* 步驟式說明 */}
+          {/* Steps Card */}
           <div
-            style={{ background: '#f5f5f5', borderRadius: 10, padding: '16px 20px', marginBottom: 20 }}
+            style={{
+              background: '#1a1a1a',
+              borderLeft: '3px solid #c9a84c',
+              border: '1px solid #2a2a2a',
+              borderLeftWidth: 3,
+              borderLeftColor: '#c9a84c',
+              borderRadius: 8,
+              padding: '20px 24px',
+              marginBottom: 20,
+            }}
           >
-            <p className="text-sm font-semibold text-gray-700 mb-3">怎麼找到我的頻道連結？</p>
-            <ol style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {[
-                '打開 YouTube（手機或電腦）',
-                '點右上角的頭像 / 大頭照',
-                '點「查看頻道」',
-                '複製網址列的連結，貼到下面的輸入框',
-              ].map((step, i) => (
+            <p
+              style={{
+                color: '#e0e0e0',
+                fontSize: 14,
+                fontWeight: 700,
+                margin: '0 0 14px 0',
+              }}
+            >
+              怎麼找到我的頻道連結？
+            </p>
+            <ol
+              style={{
+                listStyle: 'none',
+                padding: 0,
+                margin: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 12,
+              }}
+            >
+              {steps.map((step, i) => (
                 <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                   <span
                     style={{
@@ -94,71 +165,133 @@ export default function VerifyPage() {
                   >
                     {i + 1}
                   </span>
-                  <span className="text-sm text-gray-600">{step}</span>
+                  <span style={{ color: '#e0e0e0', fontSize: 14, lineHeight: 1.5 }}>{step}</span>
                 </li>
               ))}
             </ol>
-            <p className="text-sm mt-3" style={{ color: '#c9a84c', fontWeight: 600 }}>
-              👉 連結通常長這樣：youtube.com/@yourname
+            <p
+              style={{
+                color: '#c9a84c',
+                fontWeight: 600,
+                fontSize: 13,
+                marginTop: 14,
+                marginBottom: 0,
+              }}
+            >
+              連結通常長這樣：youtube.com/@yourname
             </p>
           </div>
 
+          {/* Form / Success Area */}
           {success ? (
-            <div className="text-center py-6">
-              <div className="text-4xl mb-3">✅</div>
-              <p className="text-green-600 font-semibold text-lg">確認成功！正在進入...</p>
+            <div style={{ textAlign: 'center', padding: '32px 0' }}>
+              <svg
+                width="48"
+                height="48"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#2e7d52"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                style={{ display: 'block', margin: '0 auto 12px' }}
+              >
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="9 12 11.5 14.5 15.5 9.5" />
+              </svg>
+              <p
+                style={{
+                  color: '#2e7d52',
+                  fontSize: 16,
+                  fontWeight: 700,
+                  margin: 0,
+                }}
+              >
+                確認成功！正在進入...
+              </p>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <input
-                  type="text"
-                  value={channelUrl}
-                  onChange={(e) => setChannelUrl(e.target.value)}
-                  placeholder="貼上你的頻道連結，例如：youtube.com/@yourname 或 @yourname"
-                  className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:border-transparent"
-                  style={{ '--tw-ring-color': '#cc1a22' } as React.CSSProperties}
-                  disabled={loading}
-                  required
-                />
-              </div>
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <input
+                type="text"
+                value={channelUrl}
+                onChange={(e) => setChannelUrl(e.target.value)}
+                onFocus={() => setInputFocused(true)}
+                onBlur={() => setInputFocused(false)}
+                placeholder="貼上你的頻道連結，例如：youtube.com/@yourname 或 @yourname"
+                style={{
+                  background: '#1a1a1a',
+                  border: `1px solid ${inputFocused ? '#c9a84c' : '#333'}`,
+                  color: '#e0e0e0',
+                  borderRadius: 8,
+                  padding: '12px 16px',
+                  fontSize: 14,
+                  outline: 'none',
+                  width: '100%',
+                  boxSizing: 'border-box',
+                  fontFamily: "'Noto Sans TC', sans-serif",
+                  transition: 'border-color 0.2s',
+                }}
+                disabled={loading}
+                required
+              />
 
               {error && (
-                <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3">
-                  <p className="text-red-600 text-sm">{error}</p>
+                <div
+                  style={{
+                    background: 'rgba(204, 26, 34, 0.1)',
+                    border: '1px solid rgba(204, 26, 34, 0.3)',
+                    color: '#ff6b6b',
+                    borderRadius: 8,
+                    padding: '10px 14px',
+                    fontSize: 14,
+                  }}
+                >
+                  {error}
                 </div>
               )}
 
               <button
                 type="submit"
                 disabled={loading || !channelUrl.trim()}
-                className="w-full text-white font-semibold py-3 rounded-lg transition-opacity disabled:opacity-50"
-                style={{ backgroundColor: '#cc1a22' }}
+                onMouseEnter={() => setBtnHover(true)}
+                onMouseLeave={() => setBtnHover(false)}
+                style={{
+                  background: loading || !channelUrl.trim() ? '#8a7034' : btnHover ? '#d4b05a' : '#c9a84c',
+                  color: '#0f0f0f',
+                  fontWeight: 700,
+                  fontSize: 15,
+                  padding: '13px 0',
+                  borderRadius: 8,
+                  border: 'none',
+                  cursor: loading || !channelUrl.trim() ? 'not-allowed' : 'pointer',
+                  width: '100%',
+                  fontFamily: "'Noto Sans TC', sans-serif",
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                  transition: 'background 0.2s',
+                  opacity: loading || !channelUrl.trim() ? 0.6 : 1,
+                }}
               >
                 {loading ? (
-                  <span className="flex items-center justify-center gap-2">
+                  <>
                     <svg
-                      className="animate-spin h-4 w-4 text-white"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
+                      className="spin"
+                      width="16"
+                      height="16"
                       viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="#fff"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
                     >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      />
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8v8H4z"
-                      />
+                      <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
+                      <path d="M12 2a10 10 0 0 1 10 10" stroke="#fff" />
                     </svg>
                     驗證中...
-                  </span>
+                  </>
                 ) : (
                   '確認'
                 )}
@@ -166,23 +299,33 @@ export default function VerifyPage() {
             </form>
           )}
 
-          <p className="text-gray-400 text-xs mt-6 text-center">
-            如果確認你是頻道會員但仍無法通過，請聯繫{' '}
-            <span style={{ color: '#c9a84c' }} className="font-medium">
-              JG
-            </span>
+          {/* Footer */}
+          <p style={{ color: '#555', fontSize: 12, textAlign: 'center', marginTop: 24, marginBottom: 0 }}>
+            如果確認你是頻道會員但仍無法通過，請聯繫 JG
           </p>
-        </div>
 
-        <div className="mt-4 text-center">
-          <button
-            onClick={() => signOut({ callbackUrl: '/login' })}
-            className="text-gray-400 text-xs hover:text-gray-600 transition-colors"
-          >
-            登出並換帳號
-          </button>
+          <div style={{ marginTop: 12, textAlign: 'center' }}>
+            <button
+              onClick={() => signOut({ callbackUrl: '/login' })}
+              onMouseEnter={() => setLogoutHover(true)}
+              onMouseLeave={() => setLogoutHover(false)}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: logoutHover ? '#999' : '#444',
+                fontSize: 12,
+                cursor: 'pointer',
+                padding: 0,
+                fontFamily: "'Noto Sans TC', sans-serif",
+                transition: 'color 0.2s',
+              }}
+            >
+              登出並換帳號
+            </button>
+          </div>
+
         </div>
       </div>
-    </div>
+    </>
   );
 }
