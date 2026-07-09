@@ -130,13 +130,6 @@ export default function StocksPage() {
             <div style={{ fontSize: 12, color: '#666' }}>
               <span>共 <span style={{ fontFamily: "'Raleway', sans-serif", fontWeight: 800, color: '#c9a84c' }}>{stats.total}</span> 支</span>
               <span style={{ color: '#CCC', margin: '0 6px' }}>｜</span>
-              <span>
-                平均漲幅{' '}
-                <span style={{ fontFamily: "'Raleway', sans-serif", fontWeight: 800, color: stats.avgGainPct >= 0 ? '#2e7d52' : '#c0392b' }}>
-                  {stats.avgGainPct >= 0 ? '+' : ''}{stats.avgGainPct}%
-                </span>
-              </span>
-              <span style={{ color: '#CCC', margin: '0 6px' }}>｜</span>
               <span>正報酬 <span style={{ fontFamily: "'Raleway', sans-serif", fontWeight: 800, color: '#c9a84c' }}>{stats.positiveRate}%</span></span>
               <span style={{ color: '#CCC', margin: '0 6px' }}>｜</span>
               <span>每日收盤後自動更新</span>

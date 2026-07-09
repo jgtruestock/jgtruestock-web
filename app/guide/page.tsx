@@ -15,7 +15,7 @@ export default function GuidePage() {
   const cards = [
     {
       title: '會員專屬資料庫',
-      desc: '73 支股票，每一支都是 JG 親自提到的。提到日期、當時股價、今日表現，一目了然。不是新聞列表，是 JG 真實的研究入口。',
+      desc: '這裡不是新聞列表，而是 JG 每天用來追蹤市場錯價、產業轉折與下一輪機會的研究，我每天更新也分享給你。',
     },
     {
       title: '影子 JG 點評',
