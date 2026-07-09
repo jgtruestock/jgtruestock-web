@@ -109,7 +109,7 @@ function LoginContent() {
             marginBottom: 40,
           }}
         >
-          系統會自動確認你的會員資格，不需要額外步驟
+          登入後需要貼上你的 YouTube 頻道連結來確認會員資格
         </p>
 
         {/* WebView warning */}
