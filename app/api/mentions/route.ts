@@ -80,6 +80,30 @@ export async function GET(req: NextRequest) {
 
     const allRecords = Object.values(symbolMap);
 
+    // 批量查詢 commentary 和 stock_news 的最新更新時間
+    const allSymbolsList = allRecords.map(r => r.symbol as string).filter(Boolean);
+
+    const [commentaryDocs, newsDocs] = await Promise.all([
+      jgtDb.collection('jg_commentary')
+        .find({ symbol: { $in: allSymbolsList } })
+        .project<{ symbol: string; updatedAt: Date }>({ symbol: 1, updatedAt: 1, _id: 0 })
+        .toArray(),
+      jgtDb.collection('jg_stock_news')
+        .find({ symbol: { $in: allSymbolsList } })
+        .project<{ symbol: string; updatedAt: Date }>({ symbol: 1, updatedAt: 1, _id: 0 })
+        .toArray(),
+    ]);
+
+    const commentaryDateMap: Record<string, Date> = {};
+    for (const doc of commentaryDocs) {
+      if (doc.symbol && doc.updatedAt) commentaryDateMap[doc.symbol] = doc.updatedAt;
+    }
+
+    const newsDateMap: Record<string, Date> = {};
+    for (const doc of newsDocs) {
+      if (doc.symbol && doc.updatedAt) newsDateMap[doc.symbol] = doc.updatedAt;
+    }
+
     // 標準化格式
     const records = allRecords.map((rec) => ({
       _id: rec._id?.toString() ?? rec.symbol,
@@ -101,6 +125,14 @@ export async function GET(req: NextRequest) {
       source: (rec.source as string) || 'member-channel',
       mentionCount: (rec.mentionCount as number) || 1,
       _fromMentionHistory: (rec._fromMentionHistory as boolean) || false,
+      lastUpdatedAt: (() => {
+        const commentaryDate = commentaryDateMap[rec.symbol as string];
+        const newsDate = newsDateMap[rec.symbol as string];
+        const latest = commentaryDate && newsDate
+          ? (commentaryDate > newsDate ? commentaryDate : newsDate)
+          : commentaryDate || newsDate || null;
+        return latest ? latest.toISOString().slice(0, 10) : null;
+      })(),
     }));
 
     // 排序

@@ -409,24 +409,25 @@ function CommentarySection({
                       </div>
                     </div>
                     <div style={{ height: 1, background: 'linear-gradient(90deg, #c9a84c 0%, transparent 60%)', marginTop: 16 }} />
+                    {publishedAt && (
+                      <div style={{
+                        fontSize: 11,
+                        color: '#666',
+                        fontFamily: "'Raleway', sans-serif",
+                        letterSpacing: '0.5px',
+                        marginTop: 8,
+                        marginBottom: 4,
+                      }}>
+                        更新日期：{new Date(publishedAt).toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit' })}
+                      </div>
+                    )}
                   </div>
                   <div style={{ lineHeight: 1.8 }}>{parseCommentaryBody(after)}</div>
                 </>
               );
             })()}
           </div>
-          {publishedAt && (
-            <p
-              style={{
-                fontSize: 12,
-                color: '#999',
-                margin: '16px 0 0',
-                textAlign: 'right',
-              }}
-            >
-              最後更新：{formatDate(publishedAt)}
-            </p>
-          )}
+
         </>
       ) : (
         <p
