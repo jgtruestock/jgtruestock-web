@@ -137,7 +137,7 @@ export default function VerifyPage() {
                   {[
                     '打開 YouTube App 或網頁',
                     '點右上角你的頭像',
-                    '點「查看頻道」',
+                    '點「查看頻道」（或「瀏覽頻道」）',
                     '複製網址列的連結',
                     '貼到下方輸入框',
                   ].map((step, i) => (

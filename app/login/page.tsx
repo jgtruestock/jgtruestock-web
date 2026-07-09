@@ -111,6 +111,9 @@ function LoginContent() {
         >
           登入後需要貼上你的 YouTube 頻道連結來確認會員資格
         </p>
+        <p style={{ fontSize: 13, color: '#666', marginBottom: 28, lineHeight: 1.6 }}>
+          目前封測中，具有 450 元會員等級即可登入，退出等同於取消
+        </p>
 
         {/* WebView warning */}
         {isWebView && (
