@@ -67,9 +67,7 @@ export async function middleware(req: NextRequest) {
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     if (isAdmin(token)) return NextResponse.next();
-    // Member verification enforced
-    if (isAdmin(token)) return NextResponse.next();
-    if (!token.isYTMember) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    // Soft launch: any logged-in user can access APIs
     return NextResponse.next();
   }
 
