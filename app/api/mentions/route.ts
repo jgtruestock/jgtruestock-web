@@ -90,7 +90,7 @@ export async function GET(req: NextRequest) {
         .toArray(),
       jgtDb.collection('jg_stock_news')
         .find({ symbol: { $in: allSymbolsList } })
-        .project<{ symbol: string; updatedAt: Date }>({ symbol: 1, updatedAt: 1, _id: 0 })
+        .project<{ symbol: string; articles: Array<{ publishedDate: string }> }>({ symbol: 1, articles: 1, _id: 0 })
         .toArray(),
     ]);
 
@@ -99,9 +99,15 @@ export async function GET(req: NextRequest) {
       if (doc.symbol && doc.updatedAt) commentaryDateMap[doc.symbol] = doc.updatedAt;
     }
 
+    // 從 articles 陣列中找最新的 publishedDate（白名單新聞的實際發布日期）
     const newsDateMap: Record<string, Date> = {};
-    for (const doc of newsDocs) {
-      if (doc.symbol && doc.updatedAt) newsDateMap[doc.symbol] = doc.updatedAt;
+    for (const doc of (newsDocs as any[])) {
+      if (!doc.symbol || !doc.articles?.length) continue;
+      const latestDate = doc.articles
+        .map((a: any) => a.publishedDate ? new Date(a.publishedDate) : null)
+        .filter(Boolean)
+        .sort((a: Date, b: Date) => b.getTime() - a.getTime())[0];
+      if (latestDate) newsDateMap[doc.symbol] = latestDate;
     }
 
     // 標準化格式
@@ -126,11 +132,9 @@ export async function GET(req: NextRequest) {
       mentionCount: (rec.mentionCount as number) || 1,
       _fromMentionHistory: (rec._fromMentionHistory as boolean) || false,
       lastUpdatedAt: (() => {
-        const commentaryDate = commentaryDateMap[rec.symbol as string];
+        // 顯示白名單新聞最新文章日期（不用點評更新時間）
         const newsDate = newsDateMap[rec.symbol as string];
-        const latest = commentaryDate && newsDate
-          ? (commentaryDate > newsDate ? commentaryDate : newsDate)
-          : commentaryDate || newsDate || null;
+        const latest = newsDate || null;
         return latest ? latest.toISOString().slice(0, 10) : null;
       })(),
     }));
