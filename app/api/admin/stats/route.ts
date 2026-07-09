@@ -48,6 +48,10 @@ export async function GET() {
       recentLogins,
       dailyTrend,
       todayEventCount,
+    }, {
+      headers: {
+        'Cache-Control': 'private, max-age=60, stale-while-revalidate=120',
+      },
     });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
