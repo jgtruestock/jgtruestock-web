@@ -91,7 +91,19 @@ export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
 };
 
-export function isAdmin(discordId: string | undefined): boolean {
-  if (!discordId || !ADMIN_DISCORD_ID) return false;
-  return discordId === ADMIN_DISCORD_ID;
+const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || 'jgdady@gmail.com').toLowerCase();
+
+export function isAdmin(discordId: string | undefined, email?: string): boolean {
+  // Discord admin
+  if (discordId && ADMIN_DISCORD_ID && discordId === ADMIN_DISCORD_ID) return true;
+  // Google admin by email
+  if (email && email.toLowerCase() === ADMIN_EMAIL) return true;
+  return false;
+}
+
+/** Convenience: check admin from a NextAuth session object */
+export function isAdminSession(session: any): boolean {
+  const discordId = session?.user?.discordId;
+  const email = session?.user?.email;
+  return isAdmin(discordId, email);
 }

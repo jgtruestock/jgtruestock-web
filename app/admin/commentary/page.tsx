@@ -70,9 +70,10 @@ export default function AdminCommentaryPage() {
   const [message, setMessage] = useState('');
 
   const discordId = (session?.user as any)?.discordId;
+  const email = (session?.user as any)?.email?.toLowerCase();
   const adminId = process.env.NEXT_PUBLIC_ADMIN_DISCORD_ID;
-  // Primary admin check via discordId comparison; NEXT_PUBLIC_ADMIN_DISCORD_ID is for UI only
-  const userIsAdmin = !!discordId && !!adminId && discordId === adminId;
+  const adminEmail = (process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'jgdady@gmail.com').toLowerCase();
+  const userIsAdmin = (!!discordId && !!adminId && discordId === adminId) || email === adminEmail;
 
   useEffect(() => {
     if (status === 'unauthenticated') {

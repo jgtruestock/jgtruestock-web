@@ -75,8 +75,10 @@ export default function AdminCommentarySymbolPage() {
   const [message, setMessage] = useState('');
 
   const discordId = (session?.user as any)?.discordId;
+  const email = (session?.user as any)?.email?.toLowerCase();
   const adminId = process.env.NEXT_PUBLIC_ADMIN_DISCORD_ID;
-  const userIsAdmin = discordId === adminId;
+  const adminEmail = (process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'jgdady@gmail.com').toLowerCase();
+  const userIsAdmin = discordId === adminId || email === adminEmail;
 
   useEffect(() => {
     if (status === 'unauthenticated') {

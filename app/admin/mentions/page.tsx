@@ -39,7 +39,9 @@ export default function AdminMentionsPage() {
   const searchTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const discordId = (session?.user as any)?.discordId;
-  const isAdmin = discordId === process.env.NEXT_PUBLIC_ADMIN_DISCORD_ID;
+  const email = (session?.user as any)?.email?.toLowerCase();
+  const adminEmail = (process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'jgdady@gmail.com').toLowerCase();
+  const isAdmin = discordId === process.env.NEXT_PUBLIC_ADMIN_DISCORD_ID || email === adminEmail;
 
   useEffect(() => {
     if (status === 'unauthenticated') {

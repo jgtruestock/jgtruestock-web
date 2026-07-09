@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions, isAdmin } from '@/lib/auth';
+import { authOptions, isAdminSession } from '@/lib/auth';
 import { getMemberList, getTopStockPerEmail } from '@/lib/db/activityLogs';
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
-  const discordId = (session?.user as any)?.discordId;
 
-  if (!isAdmin(discordId)) {
+  if (!isAdminSession(session)) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 

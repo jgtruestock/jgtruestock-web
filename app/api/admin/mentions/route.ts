@@ -1,13 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions, isAdmin, ADMIN_DISCORD_ID } from '@/lib/auth';
-
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'jgdady@gmail.com';
-function isAdminSession(session: any): boolean {
-  const discordId = session?.user?.discordId;
-  const email = session?.user?.email;
-  return isAdmin(discordId) || email === ADMIN_EMAIL;
-}
+import { authOptions, isAdminSession } from '@/lib/auth';
 import { getJgtDb } from '@/lib/mongodb';
 import { getHistoricalPrice, getCompanyProfile, getCurrentPrice } from '@/lib/fmp';
 

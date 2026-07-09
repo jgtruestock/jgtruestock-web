@@ -4,7 +4,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions, isAdmin } from '@/lib/auth';
+import { authOptions, isAdminSession } from '@/lib/auth';
 import { get13fDb } from '@/lib/mongodb';
 import { fetchEarningsTranscript, fetchStockNews } from '@/lib/fmp';
 import { generateCommentary } from '@/lib/ai/generateCommentary';
@@ -17,7 +17,7 @@ interface RouteParams {
 export async function POST(req: NextRequest, { params }: RouteParams) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  if (!isAdmin((session.user as any)?.discordId)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  if (!isAdminSession(session)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   const { symbol: rawSymbol } = await params;
   const symbol = rawSymbol.toUpperCase();

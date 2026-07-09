@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions, isAdmin } from '@/lib/auth';
+import { authOptions, isAdminSession } from '@/lib/auth';
 import { searchSymbol } from '@/lib/fmp';
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
-  const discordId = (session?.user as any)?.discordId;
 
-  if (!session || !isAdmin(discordId)) {
+  if (!session || !isAdminSession(session)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
