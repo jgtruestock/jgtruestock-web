@@ -13,36 +13,53 @@ export async function GET(req: NextRequest) {
 
   const db = await getJgtDb();
 
-  // 失敗記錄
-  const failures = await db.collection('jg_verify_logs')
-    .find({ success: false, createdAt: { $gte: since } })
-    .sort({ createdAt: -1 })
-    .limit(100)
-    .toArray();
+  // Run all queries in parallel
+  const [failures, statsAgg, errorDist, loggedInEmails, boundEmails] = await Promise.all([
+    // 失敗記錄
+    db.collection('jg_verify_logs')
+      .find({ success: false, createdAt: { $gte: since } })
+      .sort({ createdAt: -1 })
+      .limit(100)
+      .toArray(),
 
-  // 統計
-  const [totalAttempts, successCount, failCount] = await Promise.all([
-    db.collection('jg_verify_logs').countDocuments({ createdAt: { $gte: since } }),
-    db.collection('jg_verify_logs').countDocuments({ success: true, createdAt: { $gte: since } }),
-    db.collection('jg_verify_logs').countDocuments({ success: false, createdAt: { $gte: since } }),
+    // 單次 aggregation 取代 3 次 countDocuments
+    db.collection('jg_verify_logs').aggregate([
+      { $match: { createdAt: { $gte: since } } },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: 1 },
+          success: { $sum: { $cond: ['$success', 1, 0] } },
+          fail: { $sum: { $cond: ['$success', 0, 1] } },
+        },
+      },
+    ]).toArray(),
+
+    // 失敗原因分布
+    db.collection('jg_verify_logs').aggregate([
+      { $match: { success: false, createdAt: { $gte: since } } },
+      { $group: { _id: '$errorType', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+    ]).toArray(),
+
+    // 已登入的 email
+    db.collection('jg_login_logs').distinct('email', { createdAt: { $gte: since } }),
+
+    // 已綁定的 email
+    db.collection('user_bindings').distinct('email'),
   ]);
 
-  // 失敗原因分布
-  const errorDist = await db.collection('jg_verify_logs').aggregate([
-    { $match: { success: false, createdAt: { $gte: since } } },
-    { $group: { _id: '$errorType', count: { $sum: 1 } } },
-    { $sort: { count: -1 } },
-  ]).toArray();
-
-  // 未完成驗證的登入帳號（有 login_logs 但無 user_bindings）
-  const today = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
-  const loggedInEmails = await db.collection('jg_login_logs').distinct('email', { createdAt: { $gte: today } });
-  const boundEmails = (await db.collection('user_bindings').find({}, { projection: { email: 1 } }).toArray()).map((b: any) => b.email);
+  const s = statsAgg[0] ?? { total: 0, success: 0, fail: 0 };
   const boundSet = new Set(boundEmails);
   const unverified = loggedInEmails.filter((e: string) => !boundSet.has(e));
 
   return NextResponse.json({
-    stats: { totalAttempts, successCount, failCount, unverifiedCount: unverified.length },
+    stats: {
+      totalAttempts: s.total,
+      successCount: s.success,
+      failCount: s.fail,
+      unverifiedCount: unverified.length,
+    },
     errorDist: errorDist.map((e: any) => ({ type: e._id, count: e.count })),
     failures: failures.map((f: any) => ({
       email: f.email,
@@ -51,5 +68,7 @@ export async function GET(req: NextRequest) {
       createdAt: f.createdAt,
     })),
     unverifiedEmails: unverified.slice(0, 50),
+  }, {
+    headers: { 'Cache-Control': 'private, max-age=30, stale-while-revalidate=60' },
   });
 }

@@ -145,13 +145,15 @@ function OverviewTab({ data }: { data: StatsData }) {
   const [verifyLoading, setVerifyLoading] = useState(false);
   const [showUnverified, setShowUnverified] = useState(false);
 
-  useEffect(() => {
+  const loadVerifyData = () => {
     setVerifyLoading(true);
     fetch(`/api/admin/stats/verify-logs?days=${verifyDays}`)
       .then(r => r.json())
       .then(setVerifyData)
       .finally(() => setVerifyLoading(false));
-  }, [verifyDays]);
+  };
+
+  // Don't auto-load on mount — only load when user clicks
 
   const ERROR_LABEL: Record<string, string> = {
     not_in_members: '不在名單',
@@ -212,6 +214,14 @@ function OverviewTab({ data }: { data: StatsData }) {
           </div>
         </div>
 
+        {!verifyData && !verifyLoading && (
+          <button
+            onClick={loadVerifyData}
+            style={{ fontSize: 13, color: '#cc1a22', background: 'none', border: '1px solid #cc1a22', borderRadius: 4, padding: '4px 12px', cursor: 'pointer' }}
+          >
+            載入驗證數據
+          </button>
+        )}
         {verifyLoading ? (
           <p style={{ color: '#888', fontSize: 13 }}>載入中...</p>
         ) : verifyData ? (
