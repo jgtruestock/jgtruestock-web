@@ -14,7 +14,7 @@ function isAdmin(token: any): boolean {
 }
 
 // Front-end member-only paths
-const MEMBER_PATHS = ['/stocks'];
+const MEMBER_PATHS = ['/stocks', '/guide'];
 
 // API member-only paths
 const MEMBER_API_PATHS = ['/api/mentions', '/api/stocks'];
@@ -98,6 +98,8 @@ export const config = {
     '/admin',
     '/stocks/:path*',
     '/stocks',
+    '/guide',
+    '/guide/:path*',
     '/verify',
     '/verify/:path*',
     '/not-member',

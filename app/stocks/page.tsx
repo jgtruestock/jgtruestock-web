@@ -40,6 +40,13 @@ export default function StocksPage() {
   const [loading, setLoading] = useState(true);
   const [navigating, setNavigating] = useState<string | null>(null);
 
+  useEffect(() => {
+    const seen = localStorage.getItem('jg_guide_seen');
+    if (!seen) {
+      router.replace('/guide');
+    }
+  }, []);
+
   const fetchData = useCallback(async () => {
     try {
       const res = await fetch(`/api/mentions?sort=${sortKey}&order=${sortOrder}`);
