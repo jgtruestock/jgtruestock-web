@@ -264,6 +264,71 @@ function StockHeader({
   );
 }
 
+function parseCommentaryBody(text: string): React.ReactNode[] {
+  const lines = text.split('\n');
+  return lines.map((line, i) => {
+    // ✅ 對得上
+    if (line.startsWith('✅')) {
+      const content = line.replace(/^✅\s*/, '');
+      return (
+        <div key={i} style={{ marginBottom: 2 }}>
+          <span style={{
+            fontFamily: "'Raleway', sans-serif",
+            fontWeight: 700,
+            fontSize: 12,
+            letterSpacing: '1.5px',
+            textTransform: 'uppercase',
+            color: '#2e7d52',
+          }}>
+            ▸ 對得上
+          </span>
+          <span>{content.replace(/^對得上[：:]?\s*/, '')}</span>
+        </div>
+      );
+    }
+    // ⚠️ 尚待觀察
+    if (line.startsWith('⚠️') || line.startsWith('⚠')) {
+      const content = line.replace(/^⚠️?\s*/, '');
+      return (
+        <div key={i} style={{ marginBottom: 2 }}>
+          <span style={{
+            fontFamily: "'Raleway', sans-serif",
+            fontWeight: 700,
+            fontSize: 12,
+            letterSpacing: '1.5px',
+            textTransform: 'uppercase',
+            color: '#c9a84c',
+          }}>
+            ▸ 尚待觀察
+          </span>
+          <span>{content.replace(/^尚待觀察[：:]?\s*/, '')}</span>
+        </div>
+      );
+    }
+    // 🔴 警訊
+    if (line.startsWith('🔴')) {
+      const content = line.replace(/^🔴\s*/, '');
+      return (
+        <div key={i} style={{ marginBottom: 2 }}>
+          <span style={{
+            fontFamily: "'Raleway', sans-serif",
+            fontWeight: 700,
+            fontSize: 12,
+            letterSpacing: '1.5px',
+            textTransform: 'uppercase',
+            color: '#cc1a22',
+          }}>
+            ▸ 警訊
+          </span>
+          <span>{content.replace(/^警訊[：:]?\s*/, '')}</span>
+        </div>
+      );
+    }
+    // 一般行
+    return <span key={i} style={{ display: 'block' }}>{line}</span>;
+  });
+}
+
 function CommentarySection({
   title,
   body,
@@ -326,13 +391,13 @@ function CommentarySection({
               const shadowMarker = '【影子JG總結】';
               const idx = (body || '').indexOf(shadowMarker);
               if (idx === -1) {
-                return <span style={{ whiteSpace: 'pre-wrap' }}>{body}</span>;
+                return <div style={{ lineHeight: 1.8 }}>{parseCommentaryBody(body || '')}</div>;
               }
               const before = body!.slice(0, idx);
               const after = body!.slice(idx + shadowMarker.length);
               return (
                 <>
-                  <span style={{ whiteSpace: 'pre-wrap' }}>{before}</span>
+                  <div style={{ lineHeight: 1.8 }}>{parseCommentaryBody(before)}</div>
                   {/* Brand-stamp header for 影子JG總結 */}
                   <div style={{ margin: '28px 0 16px' }}>
                     <div style={{ height: 1, background: 'linear-gradient(90deg, #c9a84c 0%, #e8c97a 40%, transparent 100%)', marginBottom: 16 }} />
@@ -345,7 +410,7 @@ function CommentarySection({
                     </div>
                     <div style={{ height: 1, background: 'linear-gradient(90deg, #c9a84c 0%, transparent 60%)', marginTop: 16 }} />
                   </div>
-                  <span style={{ whiteSpace: 'pre-wrap' }}>{after}</span>
+                  <div style={{ lineHeight: 1.8 }}>{parseCommentaryBody(after)}</div>
                 </>
               );
             })()}
