@@ -60,7 +60,7 @@ export default function Navbar() {
               {session.user?.name}
             </span>
             <button
-              onClick={() => signOut()}
+              onClick={() => signOut({ callbackUrl: '/login' })}
               style={{
                 fontSize: 12,
                 color: '#888',
