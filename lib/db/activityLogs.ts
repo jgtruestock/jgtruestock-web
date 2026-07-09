@@ -200,6 +200,99 @@ export async function getMemberList(opts: {
   return { members, total };
 }
 
+// ─── New Analytics Functions ─────────────────────────────────────────────────
+
+// 每日登入趨勢（過去 N 天）
+export async function getDailyLoginTrend(days: number): Promise<{ date: string; count: number }[]> {
+  const db = await getJgtDb();
+  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+  const pipeline = [
+    { $match: { createdAt: { $gte: since } } },
+    {
+      $group: {
+        _id: {
+          $dateToString: { format: '%Y-%m-%d', date: '$createdAt', timezone: 'Asia/Taipei' }
+        },
+        count: { $sum: 1 }
+      }
+    },
+    { $sort: { _id: 1 } },
+  ];
+  const results = await db.collection('jg_login_logs').aggregate(pipeline).toArray();
+  return results.map(r => ({ date: r._id as string, count: r.count as number }));
+}
+
+// 頁面行為記錄（分頁 + 篩選）
+export async function getActivityEvents(opts: {
+  page: number; pageSize: number; type?: string; email?: string; days?: number;
+}): Promise<{ events: any[]; total: number }> {
+  const db = await getJgtDb();
+  const { page, pageSize, type, email, days = 7 } = opts;
+  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+  const filter: any = { createdAt: { $gte: since } };
+  if (type && type !== 'all') filter.type = type;
+  if (email) filter.email = new RegExp(email, 'i');
+  const total = await db.collection('jg_activity_events').countDocuments(filter);
+  const events = await db.collection('jg_activity_events')
+    .find(filter)
+    .sort({ createdAt: -1 })
+    .skip((page - 1) * pageSize)
+    .limit(pageSize)
+    .toArray();
+  return { events, total };
+}
+
+// Top Stocks V2（含 uniqueUsers）
+export async function getTopStocksV2(opts: { days: number; limit: number }): Promise<{ symbol: string; viewCount: number; uniqueUsers: number }[]> {
+  const db = await getJgtDb();
+  const since = opts.days > 0 ? new Date(Date.now() - opts.days * 24 * 60 * 60 * 1000) : new Date(0);
+  const pipeline = [
+    { $match: { type: 'stock_view', symbol: { $ne: null }, createdAt: { $gte: since } } },
+    {
+      $group: {
+        _id: '$symbol',
+        viewCount: { $sum: 1 },
+        uniqueUsers: { $addToSet: '$email' },
+      }
+    },
+    { $project: { symbol: '$_id', viewCount: 1, uniqueUsers: { $size: '$uniqueUsers' } } },
+    { $sort: { viewCount: -1 } },
+    { $limit: opts.limit },
+  ];
+  return db.collection('jg_activity_events').aggregate(pipeline).toArray() as any;
+}
+
+// 單一用戶行為追蹤
+export async function getUserActivity(opts: { email: string; page: number; pageSize: number }) {
+  const db = await getJgtDb();
+  const { email, page, pageSize } = opts;
+  const filter = { email: new RegExp(`^${email.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') };
+  const [logins, totalEvents, events, topSymbols] = await Promise.all([
+    db.collection('jg_login_logs').countDocuments(filter),
+    db.collection('jg_activity_events').countDocuments(filter),
+    db.collection('jg_activity_events').find(filter).sort({ createdAt: -1 }).skip((page - 1) * pageSize).limit(pageSize).toArray(),
+    db.collection('jg_activity_events').aggregate([
+      { $match: { ...filter, type: 'stock_view', symbol: { $ne: null } } },
+      { $group: { _id: '$symbol', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 5 },
+    ]).toArray(),
+  ]);
+  const firstLogin = await db.collection('jg_login_logs').findOne(filter, { sort: { createdAt: 1 } });
+  const lastActivity = await db.collection('jg_activity_events').findOne(filter, { sort: { createdAt: -1 } });
+  return {
+    summary: {
+      totalLogins: logins,
+      firstSeen: firstLogin?.createdAt ?? null,
+      lastSeen: lastActivity?.createdAt ?? null,
+      totalEvents,
+      topStocks: topSymbols.map((s: any) => s._id),
+    },
+    events,
+    total: totalEvents,
+  };
+}
+
 // Get top stock for each email
 export async function getTopStockPerEmail(
   emails: string[]

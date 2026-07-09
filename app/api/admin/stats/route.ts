@@ -5,6 +5,7 @@ import {
   getTopStocks,
   getActiveUserCount,
   getNewVsReturning,
+  getDailyLoginTrend,
 } from '@/lib/db/activityLogs';
 import { getJgtDb } from '@/lib/mongodb';
 
@@ -22,12 +23,16 @@ export async function GET() {
       topStocks,
       newVsReturning,
       recentLogins,
+      dailyTrend,
+      todayEventCount,
     ] = await Promise.all([
       getActiveUserCount(24 * 60 * 60 * 1000),       // last 24h
       getActiveUserCount(7 * 24 * 60 * 60 * 1000),   // last 7 days
-      getTopStocks(30, 10),
+      getTopStocks(30, 20),
       getNewVsReturning(),
-      getRecentLogins(10),
+      getRecentLogins(20),
+      getDailyLoginTrend(30),
+      (await (await import('@/lib/mongodb')).getJgtDb()).collection('jg_activity_events').countDocuments({ createdAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } }),
     ]);
 
     return NextResponse.json({
@@ -41,6 +46,8 @@ export async function GET() {
       },
       topStocks,
       recentLogins,
+      dailyTrend,
+      todayEventCount,
     });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
@@ -58,6 +65,7 @@ async function getRecentLogins(limit: number) {
   return docs.map((d: any) => ({
     email: d.email,
     device: d.device,
+    ip: d.ip,
     createdAt: d.createdAt,
   }));
 }
