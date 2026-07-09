@@ -84,8 +84,7 @@ export async function middleware(req: NextRequest) {
     if (isAdmin(token)) return NextResponse.next();
 
     // Member verification enforced
-    if (isAdmin(token)) return NextResponse.next();
-    if (token.provider === 'google' && !isAdmin(token) && !token.isYTMember) {
+    if (!token.isYTMember) {
       return NextResponse.redirect(new URL('/verify', req.url));
     }
 
