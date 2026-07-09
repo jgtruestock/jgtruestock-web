@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getToken } from 'next-auth/jwt';
 import { getJgtDb } from '@/lib/mongodb';
 
 export async function POST(req: NextRequest) {
   try {
+    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const userEmail = (token?.email as string)?.toLowerCase() ?? null;
+
     const body = await req.json();
     const { type, message } = body;
 
@@ -21,8 +25,8 @@ export async function POST(req: NextRequest) {
     await db.collection('jg_feedback').insertOne({
       type,
       message: message.trim().slice(0, 2000),
+      email: userEmail,
       createdAt: now,
-      // capture rough origin for context
       userAgent: req.headers.get('user-agent') ?? null,
     });
 

@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { href: '/admin/gurus', label: '🧠 大神追蹤' },
   { href: '/admin/members', label: '👥 會員動態' },
   { href: '/admin/stats', label: '📊 使用統計' },
+  { href: '/admin/feedback', label: '💬 用戶留言' },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

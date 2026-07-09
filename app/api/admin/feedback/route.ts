@@ -1,0 +1,28 @@
+import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions, isAdmin } from '@/lib/auth';
+import { getJgtDb } from '@/lib/mongodb';
+
+export async function GET() {
+  const session = await getServerSession(authOptions);
+  const discordId = (session?.user as any)?.discordId;
+  const email = (session?.user as any)?.email?.toLowerCase();
+
+  if (!isAdmin(discordId) && email !== 'jgdady@gmail.com') {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
+  const db = await getJgtDb();
+  const feedbacks = await db.collection('jg_feedback')
+    .find({})
+    .sort({ createdAt: -1 })
+    .limit(200)
+    .toArray();
+
+  return NextResponse.json({
+    feedbacks: feedbacks.map(f => ({
+      ...f,
+      _id: f._id.toString(),
+    })),
+  });
+}
