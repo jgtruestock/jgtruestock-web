@@ -10,6 +10,7 @@ export default function VerifyPage() {
   const [channelUrl, setChannelUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isNotMember, setIsNotMember] = useState(false);
   const [success, setSuccess] = useState(false);
 
   const handleSubmit = async () => {
@@ -29,6 +30,9 @@ export default function VerifyPage() {
       const data = await res.json();
 
       if (!res.ok) {
+        if (res.status === 403) {
+          setIsNotMember(true);
+        }
         setError(data.error || '驗證失敗，請稍後再試');
         setLoading(false);
         return;
@@ -250,7 +254,7 @@ export default function VerifyPage() {
                   value={channelUrl}
                   onChange={(e) => {
                     setChannelUrl(e.target.value);
-                    if (error) setError('');
+                    if (error) { setError(''); setIsNotMember(false); }
                   }}
                   placeholder="貼上你的 YouTube 頻道連結"
                   style={{
@@ -280,7 +284,7 @@ export default function VerifyPage() {
                 />
 
                 {/* Error */}
-                {error && (
+                {error && !isNotMember && (
                   <p
                     style={{
                       fontSize: 12,
@@ -292,6 +296,46 @@ export default function VerifyPage() {
                   >
                     {error}
                   </p>
+                )}
+
+                {/* Not a member — join prompt */}
+                {isNotMember && (
+                  <div
+                    style={{
+                      marginTop: 8,
+                      marginBottom: 8,
+                      padding: '14px 16px',
+                      background: 'oklch(0.16 0.01 65)',
+                      border: '1px solid rgba(201,168,76,0.35)',
+                      borderRadius: 8,
+                      textAlign: 'center',
+                    }}
+                  >
+                    <p style={{ fontSize: 13, color: '#e0e0e0', fontWeight: 600, marginBottom: 6 }}>
+                      你目前還不是 JG 頻道會員
+                    </p>
+                    <p style={{ fontSize: 12, color: 'oklch(0.55 0.01 65)', marginBottom: 14, lineHeight: 1.6 }}>
+                      加入會員後回來再驗證一次即可
+                    </p>
+                    <a
+                      href="https://youtu.be/EY2SnYA9bHU"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        display: 'inline-block',
+                        padding: '10px 24px',
+                        background: '#c9a84c',
+                        color: 'oklch(0.15 0.01 65)',
+                        fontSize: 14,
+                        fontWeight: 700,
+                        borderRadius: 6,
+                        textDecoration: 'none',
+                        letterSpacing: '0.04em',
+                      }}
+                    >
+                      加入 JG 頻道會員 →
+                    </a>
+                  </div>
                 )}
 
                 {/* Submit */}
