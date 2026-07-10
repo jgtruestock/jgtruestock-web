@@ -6,8 +6,19 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions, isAdminSession } from '@/lib/auth';
 import { get13fDb } from '@/lib/mongodb';
-import { fetchEarningsTranscript, fetchStockNews } from '@/lib/fmp';
+import { fetchEarningsTranscript, fetchStockNews, StockNewsArticle } from '@/lib/fmp';
+import { getStockNews } from '@/lib/db/stockNews';
+import type { JGStockNewsArticle } from '@/types/commentary';
 import { generateCommentary } from '@/lib/ai/generateCommentary';
+
+const NEWS_SOURCE_WHITELIST = [
+  'reuters', 'wsj', 'marketwatch', 'businesswire', 'business wire',
+  'globenewswire', 'globe newswire', 'prnewswire', 'pr newswire', 'cnbc', 'barrons',
+];
+
+function toStockNewsArticle(a: JGStockNewsArticle, symbol: string): StockNewsArticle {
+  return { title: a.title, url: a.url, publishedDate: a.publishedDate, site: a.source, text: a.snippet, symbol };
+}
 import { upsertCommentary } from '@/lib/db/commentary';
 
 interface RouteParams {
@@ -48,8 +59,22 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     const transcripts = await fetchEarningsTranscript(symbol);
     const transcript = transcripts.length > 0 ? transcripts[0] : null;
 
-    // 3. Fetch latest news
-    const rawNews = await fetchStockNews(symbol, 30);
+    // 3. Get news — prefer DB (whitelist-filtered); fallback to FMP with whitelist
+    const newsDoc = await getStockNews(symbol);
+    let rawNews: StockNewsArticle[];
+    if (newsDoc && newsDoc.articles && newsDoc.articles.length > 0) {
+      rawNews = newsDoc.articles
+        .slice()
+        .sort((a, b) => new Date(b.publishedDate).getTime() - new Date(a.publishedDate).getTime())
+        .slice(0, 30)
+        .map((a) => toStockNewsArticle(a, symbol));
+    } else {
+      // Fallback: FMP direct, apply whitelist filter
+      const fmpNews = await fetchStockNews(symbol, 50);
+      rawNews = fmpNews.filter((a) =>
+        NEWS_SOURCE_WHITELIST.some((s) => (a.site ?? '').toLowerCase().includes(s))
+      ).slice(0, 30);
+    }
 
     // 4. Generate AI commentary
     const { title, body, model, keyPoints } = await generateCommentary(
