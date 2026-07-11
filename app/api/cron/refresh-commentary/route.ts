@@ -145,6 +145,17 @@ export async function GET(request: Request) {
             status: 'published',
             updatedAt: now,
             lastNewsRefreshAt: now,
+            // 兩段式新格式
+            earningsDirection: {
+              body: result.earningsDirectionBody,
+              generatedAt: now,
+            },
+            shadowJGSummary: {
+              body: result.shadowJGSummaryBody,
+              generatedAt: now,
+            },
+            // KeyPoints
+            keyPoints: result.keyPoints,
           },
         },
         { upsert: false } // 只更新現有的，不新增
