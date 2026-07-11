@@ -35,6 +35,8 @@ export interface GenerateCommentaryResult {
   body: string;           // 原有的敘述式摘要（保留）
   model: string;
   keyPoints: KeyPoint[];  // 新增：結構化要點
+  earningsDirectionBody: string;  // 兩段式：Block A（公司介紹+法說會+新語）
+  shadowJGSummaryBody: string;    // 兩段式：Block B（影子JG總結）
 }
 
 export async function generateCommentary(
@@ -67,7 +69,10 @@ export async function generateCommentary(
   // ── Two-step KeyPoint extraction ─────────────────────────────────────────
   const keyPoints = await generateKeyPoints(client, transcript, news);
 
-  return { ...parsed, model: MODEL, keyPoints };
+  // ── Split body into Block A + Block B ────────────────────────────────────
+  const { earningsDirectionBody, shadowJGSummaryBody } = splitBody(parsed.body);
+
+  return { ...parsed, model: MODEL, keyPoints, earningsDirectionBody, shadowJGSummaryBody };
 }
 
 // ─── Two-step KeyPoint generation ────────────────────────────────────────────
@@ -204,6 +209,18 @@ ${newsText}`;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function splitBody(body: string): { earningsDirectionBody: string; shadowJGSummaryBody: string } {
+  const marker = '【影子JG總結】';
+  const idx = body.indexOf(marker);
+  if (idx === -1) {
+    return { earningsDirectionBody: body, shadowJGSummaryBody: '' };
+  }
+  return {
+    earningsDirectionBody: body.slice(0, idx).trim(),
+    shadowJGSummaryBody: (marker + body.slice(idx + marker.length)).trim(),
+  };
+}
 
 function buildNewsText(news: StockNewsArticle[]): string {
   if (!news || news.length === 0) return '（無新聞資料）';

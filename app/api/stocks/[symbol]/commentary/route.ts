@@ -29,6 +29,12 @@ export async function GET(
       title: commentary.publishedTitle,
       body: commentary.publishedBody ?? '',
       publishedAt: commentary.publishedAt?.toISOString() ?? '',
+      earningsDirection: commentary.earningsDirection
+        ? { body: commentary.earningsDirection.body, generatedAt: commentary.earningsDirection.generatedAt?.toISOString() ?? null }
+        : null,
+      shadowJGSummary: commentary.shadowJGSummary
+        ? { body: commentary.shadowJGSummary.body, generatedAt: commentary.shadowJGSummary.generatedAt?.toISOString() ?? null }
+        : null,
     };
     return NextResponse.json(res);
   } catch (err) {

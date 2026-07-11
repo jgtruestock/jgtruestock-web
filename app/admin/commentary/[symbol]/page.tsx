@@ -25,6 +25,8 @@ interface CommentaryDetail {
   publishedAt: string | null;
   updatedAt: string | null;
   keyPoints?: KeyPoint[];
+  earningsDirection?: { body: string; generatedAt: string } | null;
+  shadowJGSummary?: { body: string; generatedAt: string } | null;
   publishHistory?: PublishHistoryEntry[];
 }
 
@@ -328,6 +330,62 @@ export default function AdminCommentarySymbolPage() {
           <div style={{ textAlign: 'right', fontSize: 12, color: wordCount >= 200 && wordCount <= 400 ? '#1A7340' : '#E67E22', marginTop: 4 }}>
             字數：{wordCount} / 建議 200-400
           </div>
+
+          {/* 兩段式點評預覽（新格式） */}
+          {(data?.earningsDirection || data?.shadowJGSummary) ? (
+            <div style={{ marginTop: 24 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: '#666', marginBottom: 12 }}>
+                兩段式點評（新格式）
+              </div>
+
+              {data.earningsDirection && (
+                <div
+                  style={{
+                    background: '#F9F7F2',
+                    border: '1px solid #E8E4DC',
+                    borderRadius: 6,
+                    padding: '16px',
+                    marginBottom: 0,
+                  }}
+                >
+                  <div style={{ fontSize: 12, fontWeight: 700, color: '#c9a84c', marginBottom: 8, letterSpacing: '1px', textTransform: 'uppercase' }}>
+                    Block A：法說會重點
+                  </div>
+                  <p style={{ fontSize: 13, color: '#444', lineHeight: 1.7, whiteSpace: 'pre-wrap', margin: 0 }}>
+                    {data.earningsDirection.body}
+                  </p>
+                  <div style={{ fontSize: 11, color: '#aaa', marginTop: 8 }}>
+                    生成時間：{data.earningsDirection.generatedAt?.replace('T', ' ').slice(0, 16)}
+                  </div>
+                </div>
+              )}
+
+              {data.earningsDirection && data.shadowJGSummary && (
+                <div style={{ height: 1, background: '#E0DCD6', margin: '16px 0' }} />
+              )}
+
+              {data.shadowJGSummary && (
+                <div
+                  style={{
+                    background: '#F9F7F2',
+                    border: '1px solid #E8E4DC',
+                    borderRadius: 6,
+                    padding: '16px',
+                  }}
+                >
+                  <div style={{ fontSize: 12, fontWeight: 700, color: '#cc1a22', marginBottom: 8, letterSpacing: '1px', textTransform: 'uppercase' }}>
+                    Block B：影子JG總結
+                  </div>
+                  <p style={{ fontSize: 13, color: '#444', lineHeight: 1.7, whiteSpace: 'pre-wrap', margin: 0 }}>
+                    {data.shadowJGSummary.body}
+                  </p>
+                  <div style={{ fontSize: 11, color: '#aaa', marginTop: 8 }}>
+                    生成時間：{data.shadowJGSummary.generatedAt?.replace('T', ' ').slice(0, 16)}
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : null}
         </div>
 
         {/* Transcript link */}

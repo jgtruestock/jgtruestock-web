@@ -38,6 +38,12 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
     publishedAt: doc.publishedAt?.toISOString() ?? null,
     updatedAt: doc.updatedAt?.toISOString() ?? null,
     keyPoints: doc.keyPoints ?? [],
+    earningsDirection: doc.earningsDirection
+      ? { body: doc.earningsDirection.body, generatedAt: doc.earningsDirection.generatedAt?.toISOString() ?? null }
+      : null,
+    shadowJGSummary: doc.shadowJGSummary
+      ? { body: doc.shadowJGSummary.body, generatedAt: doc.shadowJGSummary.generatedAt?.toISOString() ?? null }
+      : null,
     publishHistory: (doc.publishHistory ?? []).map((h) => ({
       publishedTitle: h.publishedTitle,
       publishedBody: h.publishedBody,

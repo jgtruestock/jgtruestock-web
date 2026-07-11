@@ -77,7 +77,7 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     }
 
     // 4. Generate AI commentary
-    const { title, body, model, keyPoints } = await generateCommentary(
+    const { title, body, model, keyPoints, earningsDirectionBody, shadowJGSummaryBody } = await generateCommentary(
       symbol,
       transcript,
       rawNews,
@@ -94,6 +94,14 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
       draftGeneratedAt: now,
       draftModel: model,
       keyPoints,
+      earningsDirection: {
+        body: earningsDirectionBody,
+        generatedAt: now,
+      },
+      shadowJGSummary: {
+        body: shadowJGSummaryBody,
+        generatedAt: now,
+      },
       status: 'draft',
       sourcesSummary: {
         earningsTranscriptCount: transcript ? 1 : 0,
@@ -112,6 +120,8 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
         draftGeneratedAt: now.toISOString(),
         draftModel: model,
         keyPoints,
+        earningsDirection: { body: earningsDirectionBody, generatedAt: now.toISOString() },
+        shadowJGSummary: { body: shadowJGSummaryBody, generatedAt: now.toISOString() },
         status: 'draft',
       },
     });

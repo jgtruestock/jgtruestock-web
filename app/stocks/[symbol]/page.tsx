@@ -329,16 +329,48 @@ function parseCommentaryBody(text: string): React.ReactNode[] {
   });
 }
 
+function ShadowJGHeader({ publishedAt }: { publishedAt?: string | null }) {
+  return (
+    <div style={{ margin: '28px 0 16px' }}>
+      <div style={{ height: 1, background: 'linear-gradient(90deg, #c9a84c 0%, #e8c97a 40%, transparent 100%)', marginBottom: 16 }} />
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ width: 4, height: 36, background: '#cc1a22', flexShrink: 0 }} />
+        <div>
+          <div style={{ fontFamily: "'Raleway', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '3px', color: '#c9a84c', textTransform: 'uppercase', marginBottom: 3 }}>Shadow JG &middot; Member Exclusive</div>
+          <div style={{ fontFamily: "'Noto Serif TC', serif", fontSize: 20, fontWeight: 900, color: '#cc1a22', lineHeight: 1.2 }}>影子JG總結</div>
+        </div>
+      </div>
+      <div style={{ height: 1, background: 'linear-gradient(90deg, #c9a84c 0%, transparent 60%)', marginTop: 16 }} />
+      {publishedAt && (
+        <div style={{
+          fontSize: 11,
+          color: '#666',
+          fontFamily: "'Raleway', sans-serif",
+          letterSpacing: '0.5px',
+          marginTop: 8,
+          marginBottom: 4,
+        }}>
+          更新日期：{new Date(publishedAt).toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit' })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function CommentarySection({
   title,
   body,
   publishedAt,
+  earningsDirectionBody,
+  shadowJGSummaryBody,
 }: {
   title?: string | null;
   body?: string | null;
   publishedAt?: string | null;
+  earningsDirectionBody?: string | null;
+  shadowJGSummaryBody?: string | null;
 }) {
-  const hasContent = title && body;
+  const hasContent = title && (body || earningsDirectionBody);
 
   return (
     <div
@@ -387,45 +419,36 @@ function CommentarySection({
               color: '#333',
             }}
           >
-            {(() => {
-              const shadowMarker = '【影子JG總結】';
-              const idx = (body || '').indexOf(shadowMarker);
-              if (idx === -1) {
-                return <div style={{ lineHeight: 1.8 }}>{parseCommentaryBody(body || '')}</div>;
-              }
-              const before = body!.slice(0, idx);
-              const after = body!.slice(idx + shadowMarker.length);
-              return (
-                <>
-                  <div style={{ lineHeight: 1.8 }}>{parseCommentaryBody(before)}</div>
-                  {/* Brand-stamp header for 影子JG總結 */}
-                  <div style={{ margin: '28px 0 16px' }}>
-                    <div style={{ height: 1, background: 'linear-gradient(90deg, #c9a84c 0%, #e8c97a 40%, transparent 100%)', marginBottom: 16 }} />
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <div style={{ width: 4, height: 36, background: '#cc1a22', flexShrink: 0 }} />
-                      <div>
-                        <div style={{ fontFamily: "'Raleway', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '3px', color: '#c9a84c', textTransform: 'uppercase', marginBottom: 3 }}>Shadow JG &middot; Member Exclusive</div>
-                        <div style={{ fontFamily: "'Noto Serif TC', serif", fontSize: 20, fontWeight: 900, color: '#cc1a22', lineHeight: 1.2 }}>影子JG總結</div>
-                      </div>
-                    </div>
-                    <div style={{ height: 1, background: 'linear-gradient(90deg, #c9a84c 0%, transparent 60%)', marginTop: 16 }} />
-                    {publishedAt && (
-                      <div style={{
-                        fontSize: 11,
-                        color: '#666',
-                        fontFamily: "'Raleway', sans-serif",
-                        letterSpacing: '0.5px',
-                        marginTop: 8,
-                        marginBottom: 4,
-                      }}>
-                        更新日期：{new Date(publishedAt).toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit' })}
-                      </div>
-                    )}
-                  </div>
-                  <div style={{ lineHeight: 1.8 }}>{parseCommentaryBody(after)}</div>
-                </>
-              );
-            })()}
+            {earningsDirectionBody != null ? (
+              // 新格式：earningsDirection + shadowJGSummary 分開顯示
+              <>
+                <div style={{ lineHeight: 1.8 }}>{parseCommentaryBody(earningsDirectionBody)}</div>
+                {shadowJGSummaryBody && (
+                  <>
+                    <ShadowJGHeader publishedAt={publishedAt} />
+                    <div style={{ lineHeight: 1.8 }}>{parseCommentaryBody(shadowJGSummaryBody)}</div>
+                  </>
+                )}
+              </>
+            ) : (
+              // 舊格式 fallback：從 publishedBody 解析
+              (() => {
+                const shadowMarker = '【影子JG總結】';
+                const idx = (body || '').indexOf(shadowMarker);
+                if (idx === -1) {
+                  return <div style={{ lineHeight: 1.8 }}>{parseCommentaryBody(body || '')}</div>;
+                }
+                const before = body!.slice(0, idx);
+                const after = body!.slice(idx + shadowMarker.length);
+                return (
+                  <>
+                    <div style={{ lineHeight: 1.8 }}>{parseCommentaryBody(before)}</div>
+                    <ShadowJGHeader publishedAt={publishedAt} />
+                    <div style={{ lineHeight: 1.8 }}>{parseCommentaryBody(after)}</div>
+                  </>
+                );
+              })()
+            )}
           </div>
 
         </>
@@ -648,6 +671,16 @@ export default async function StockDetailPage({ params }: StockPageProps) {
           body={isPublished ? commentary?.publishedBody : null}
           publishedAt={
             isPublished ? commentary?.publishedAt?.toISOString() : null
+          }
+          earningsDirectionBody={
+            isPublished && commentary?.earningsDirection
+              ? commentary.earningsDirection.body
+              : null
+          }
+          shadowJGSummaryBody={
+            isPublished && commentary?.shadowJGSummary
+              ? commentary.shadowJGSummary.body
+              : null
           }
         />
 

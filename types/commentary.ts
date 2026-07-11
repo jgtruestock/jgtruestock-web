@@ -35,6 +35,17 @@ export interface JGCommentary {
   // key points from two-step AI analysis
   keyPoints?: KeyPoint[];
 
+  // 兩段式點評（新格式）
+  earningsDirection?: {
+    body: string;
+    generatedAt: Date;
+  } | null;
+
+  shadowJGSummary?: {
+    body: string;
+    generatedAt: Date;
+  } | null;
+
   // status
   status: 'draft' | 'published' | 'stale';
 
@@ -120,6 +131,8 @@ export interface CommentaryAPIResponsePublished {
   title: string;
   body: string;
   publishedAt: string;
+  earningsDirection?: { body: string; generatedAt: string | null } | null;
+  shadowJGSummary?: { body: string; generatedAt: string | null } | null;
 }
 
 export type CommentaryResponse = CommentaryAPIResponse | CommentaryAPIResponsePublished;
