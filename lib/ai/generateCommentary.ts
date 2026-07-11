@@ -211,15 +211,37 @@ ${newsText}`;
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function splitBody(body: string): { earningsDirectionBody: string; shadowJGSummaryBody: string } {
-  const marker = '【影子JG總結】';
-  const idx = body.indexOf(marker);
-  if (idx === -1) {
-    return { earningsDirectionBody: body, shadowJGSummaryBody: '' };
+  // Try both variants: with and without space (《AI 有時會加空格》)
+  const markers = ['【影子JG總結】', '【影子JG 總結】', '【影子JG 總結】'];
+  for (const marker of markers) {
+    const idx = body.indexOf(marker);
+    if (idx !== -1) {
+      return {
+        earningsDirectionBody: body.slice(0, idx).trim(),
+        shadowJGSummaryBody: ('【影子JG總結】\n' + body.slice(idx + marker.length)).trim(),
+      };
+    }
   }
-  return {
-    earningsDirectionBody: body.slice(0, idx).trim(),
-    shadowJGSummaryBody: (marker + body.slice(idx + marker.length)).trim(),
-  };
+
+  // Fallback: AI 有時會忘記輸出 【影子JG總結】 標記，但仍會用 ✅/⚠️/🔴 開頭
+  // 在 【官方申報】 之後找第一個 ✅/⚠️/🔴 出現的位置，從那行切開
+  const filingMarker = '【官方申報】';
+  const filingIdx = body.indexOf(filingMarker);
+  const searchFrom = filingIdx !== -1 ? filingIdx + filingMarker.length : 0;
+  const afterFiling = body.slice(searchFrom);
+  const emojiMatch = afterFiling.search(/^(✅|⚠️|🔴)/m);
+  if (emojiMatch !== -1) {
+    // 回到整體 body 的 index
+    const splitPoint = searchFrom + emojiMatch;
+    // 從行首切開
+    const lineStart = body.lastIndexOf('\n', splitPoint - 1) + 1;
+    return {
+      earningsDirectionBody: body.slice(0, lineStart).trim(),
+      shadowJGSummaryBody: ('【影子JG總結】\n' + body.slice(lineStart)).trim(),
+    };
+  }
+
+  return { earningsDirectionBody: body, shadowJGSummaryBody: '' };
 }
 
 function buildNewsText(news: StockNewsArticle[]): string {
@@ -292,6 +314,7 @@ ASML 範例：
 近期是否有官方公告或申報文件。有就列日期和內容，沒有就說沒有，並說明法說會提到的重大承諾目前停留在口頭階段。
 
 【影子JG總結】
+⚠️ 這個段落標題【影子JG總結】是系統必要的切割標記，必須一字不差輸出「【影子JG總結】」這七個字（含全形括號），不能省略、不能改字。
 這段是你作為影子JG的主觀判斷。在腦子裡想清楚三件事：哪些事情正在兌現、哪些還在等、有沒有跑反的。然後用流暢的對話寫出來，不要逐條列舉，但要讓對得上的以✅開頭、尚待觀察的以⚠️開頭、警訊的以🔴開頭各佔一行，尚待觀察最後一行加「上面這些如果戰友有看到相關消息，記得告訴JG！」。最後給整體方向判斷，說加速、減緩還是有警示燈，結論一句話收尾。語氣學 ASML 那個例子，但根據這家公司的狀況自由發揮，不要死板。`;
 }
 
@@ -345,7 +368,7 @@ ${newsSection}
 - 【法說會方向】：先用敘事方式說這家公司現在最值得關注的發展是什麼，像跟台灣投資朋友解釋，然後再詳細各部門業績、下季指引、重大計畫時程、風險、競爭定位
 - 【30天新聞比對】：有新聞就說方向有沒有在變；沒有報導就說沒有，并說投資人應要待哪個催化劑事件。不要提「白名單」這個詞
 - 【官方申報】：有就列出，沒有就說沒有
-- 【影子JG總結】：在腦子裡想清楚「對得上的、尚待觀察的、跑反的」，用流暢對話寫出來。對得上以✅、尚待觀察以⚠️、警訊以🔴開頭各一行。語氣就像 ASML 那個范例，但不要模仿 ASML，要對著這家公司。
+- 【影子JG總結】：⚠️ 這是強制段落，必須輸出「【影子JG總結】」這七個字（含全形括號）作為段落開頭，不能省略、不能改字。在腦子裡想清楚「對得上的、尚待觀察的、跑反的」，用流暢對話寫出來。對得上以✅、尚待觀察以⚠️、警訊以🔴開頭各一行。語氣就像 ASML 那個範例，但不要模仿 ASML，要對著這家公司。
 不要下交易建議。`;
 }
 
