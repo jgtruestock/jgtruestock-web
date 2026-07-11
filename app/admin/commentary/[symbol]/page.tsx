@@ -6,6 +6,12 @@ import { useRouter, useParams } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import type { KeyPoint, PromiseCategory, PromiseStatus } from '@/types/commentary';
 
+interface PublishHistoryEntry {
+  publishedTitle: string | null;
+  publishedBody: string | null;
+  publishedAt: string;
+}
+
 interface CommentaryDetail {
   symbol: string;
   exists: boolean;
@@ -19,6 +25,7 @@ interface CommentaryDetail {
   publishedAt: string | null;
   updatedAt: string | null;
   keyPoints?: KeyPoint[];
+  publishHistory?: PublishHistoryEntry[];
 }
 
 const CATEGORY_LABELS: Record<PromiseCategory, string> = {
@@ -429,6 +436,44 @@ export default function AdminCommentarySymbolPage() {
             >
               {data.publishedBody}
             </p>
+          </div>
+        )}
+
+        {/* Publish History */}
+        {data?.publishHistory && data.publishHistory.length > 0 && (
+          <div
+            style={{
+              background: '#fff',
+              borderRadius: 10,
+              border: '1px solid #E8E4DC',
+              padding: '24px',
+              marginBottom: 20,
+            }}
+          >
+            <h3 style={{ fontSize: 15, fontWeight: 600, color: '#1A1A1A', marginBottom: 12 }}>
+              發布紀錄
+            </h3>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+              {data.publishHistory.map((h, i) => (
+                <li
+                  key={i}
+                  style={{
+                    display: 'flex',
+                    gap: 12,
+                    alignItems: 'baseline',
+                    padding: '8px 0',
+                    borderBottom: i < data.publishHistory!.length - 1 ? '1px solid #F0EDE6' : 'none',
+                  }}
+                >
+                  <span style={{ fontSize: 12, color: '#999', flexShrink: 0 }}>
+                    {h.publishedAt.slice(0, 10)}
+                  </span>
+                  <span style={{ fontSize: 14, color: '#444' }}>
+                    {h.publishedTitle ?? '（無標題）'}
+                  </span>
+                </li>
+              ))}
+            </ul>
           </div>
         )}
 

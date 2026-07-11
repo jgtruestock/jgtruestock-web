@@ -38,6 +38,11 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
     publishedAt: doc.publishedAt?.toISOString() ?? null,
     updatedAt: doc.updatedAt?.toISOString() ?? null,
     keyPoints: doc.keyPoints ?? [],
+    publishHistory: (doc.publishHistory ?? []).map((h) => ({
+      publishedTitle: h.publishedTitle,
+      publishedBody: h.publishedBody,
+      publishedAt: h.publishedAt instanceof Date ? h.publishedAt.toISOString() : h.publishedAt,
+    })).reverse(),
   });
 }
 

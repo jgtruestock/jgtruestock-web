@@ -20,6 +20,13 @@ export interface JGCommentary {
   publishedBody: string | null;
   publishedAt: Date | null;
 
+  // publish history (last 10 versions)
+  publishHistory?: Array<{
+    publishedTitle: string | null;
+    publishedBody: string | null;
+    publishedAt: Date;
+  }>;
+
   // earnings version tracking (for dedup in check-earnings cron)
   latestEarningsYear: number | null;
   latestEarningsQuarter: number | null;  // legacy (may be undefined from FMP)

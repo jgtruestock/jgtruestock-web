@@ -38,22 +38,41 @@ export async function publishCommentary(
   const db = await getJgtDb();
   const now = new Date();
 
-  // If title/body provided, update draft first then publish
-  const setFields: Record<string, unknown> = {
-    publishedAt: now,
-    updatedAt: now,
-    status: 'published',
-  };
-
   // If caller provides explicit title/body use them; otherwise promote draft to published
   const commentary = await getCommentary(symbol);
 
-  setFields.publishedTitle = data.title ?? commentary?.draftTitle ?? null;
-  setFields.publishedBody = data.body ?? commentary?.draftBody ?? null;
+  const newTitle = data.title ?? commentary?.draftTitle ?? null;
+  const newBody = data.body ?? commentary?.draftBody ?? null;
+
+  const updateOps: Record<string, unknown> = {
+    $set: {
+      publishedTitle: newTitle,
+      publishedBody: newBody,
+      publishedAt: now,
+      updatedAt: now,
+      status: 'published',
+    },
+  };
+
+  // If there's an existing published version, push it to history
+  if (commentary?.publishedTitle || commentary?.publishedBody) {
+    updateOps.$push = {
+      publishHistory: {
+        $each: [
+          {
+            publishedTitle: commentary.publishedTitle ?? null,
+            publishedBody: commentary.publishedBody ?? null,
+            publishedAt: commentary.publishedAt ?? now,
+          },
+        ],
+        $slice: -10,
+      },
+    };
+  }
 
   await db
     .collection('jg_commentary')
-    .updateOne({ symbol: symbol.toUpperCase() }, { $set: setFields });
+    .updateOne({ symbol: symbol.toUpperCase() }, updateOps as any);
 
   return now;
 }
