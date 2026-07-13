@@ -14,8 +14,7 @@ import { getStockNews } from '@/lib/db/stockNews';
 import type { JGStockNewsArticle } from '@/types/commentary';
 import type { StockNewsArticle } from '@/lib/fmp';
 
-const MAX_SYMBOLS = 20;
-const SLEEP_MS = 2000;
+const SLEEP_MS = 1000;
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -59,8 +58,8 @@ export async function GET(request: Request) {
   const allSymbols = Array.from(symbolSet);
   console.log(`[refresh-commentary] Found ${allSymbols.length} symbols:`, allSymbols);
 
-  // Batch: process at most MAX_SYMBOLS per run
-  const symbols = allSymbols.slice(0, MAX_SYMBOLS);
+  // Process all symbols (63 × 1s sleep ≈ 63s, well within 300s limit)
+  const symbols = allSymbols;
 
   let refreshed = 0;
   let skipped = 0;
@@ -101,15 +100,31 @@ export async function GET(request: Request) {
 
       console.log(`[refresh-commentary] ${symbol}: new news detected, regenerating commentary...`);
 
-      // 5. Fetch latest earnings transcript
-      const transcripts = await fetchEarningsTranscript(symbol);
-      if (!transcripts || transcripts.length === 0) {
-        console.log(`[refresh-commentary] ${symbol}: no transcript found, skipping`);
-        skipped++;
-        await sleep(SLEEP_MS);
-        continue;
+      // 5. Get earnings transcript — prefer cached jg_transcripts, fall back to FMP
+      let latest = await jgtDb
+        .collection('jg_transcripts')
+        .findOne({ symbol }, { sort: { year: -1, quarter: -1 } }) as import('@/lib/fmp').EarningsTranscript | null;
+
+      if (!latest) {
+        console.log(`[refresh-commentary] ${symbol}: no cached transcript, fetching from FMP...`);
+        const transcripts = await fetchEarningsTranscript(symbol);
+        if (!transcripts || transcripts.length === 0) {
+          console.log(`[refresh-commentary] ${symbol}: no transcript from FMP either, skipping`);
+          skipped++;
+          await sleep(SLEEP_MS);
+          continue;
+        }
+        latest = transcripts[0];
+        // Cache for future runs
+        await jgtDb.collection('jg_transcripts').updateOne(
+          { symbol, year: latest.year, quarter: latest.quarter },
+          { $set: { ...latest, cachedAt: new Date() } },
+          { upsert: true }
+        );
+        console.log(`[refresh-commentary] ${symbol}: cached transcript ${latest.year}-Q${latest.quarter}`);
+      } else {
+        console.log(`[refresh-commentary] ${symbol}: using cached transcript ${latest.year}-Q${latest.quarter}`);
       }
-      const latest = transcripts[0];
 
       // 6. Prepare news articles (latest 20)
       const newsArticles: StockNewsArticle[] = newsDoc.articles
@@ -179,6 +194,7 @@ export async function GET(request: Request) {
     refreshed,
     skipped,
     errors,
+    sleepMs: SLEEP_MS,
     timestamp: new Date().toISOString(),
   });
 }

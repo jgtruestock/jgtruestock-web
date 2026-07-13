@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { href: '/admin/members', label: '👥 會員動態' },
   { href: '/admin/stats', label: '📊 使用統計' },
   { href: '/admin/feedback', label: '💬 用戶留言' },
+  { href: '/admin/announcement', label: '📢 公告管理' },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -26,15 +27,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           zIndex: 1000,
           backgroundColor: '#1a1a1a',
           borderBottom: '1px solid #333',
-          padding: '0 16px',
           display: 'flex',
           alignItems: 'center',
           height: 48,
-          gap: 4,
+          overflowX: 'auto',
+          WebkitOverflowScrolling: 'touch',
+          scrollbarWidth: 'none',
         }}
       >
-        <span style={{ color: '#888', fontSize: 12, marginRight: 12, whiteSpace: 'nowrap' }}>
-          後台管理：
+        <style>{`nav::-webkit-scrollbar { display: none; }`}</style>
+        <span style={{ color: '#888', fontSize: 12, padding: '0 12px', whiteSpace: 'nowrap', flexShrink: 0 }}>
+          後台
         </span>
         {NAV_ITEMS.map(({ href, label }) => {
           const isActive = pathname === href || pathname.startsWith(href + '/');
@@ -50,6 +53,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 fontWeight: isActive ? 600 : 400,
                 borderBottom: isActive ? '2px solid #e8b84b' : '2px solid transparent',
                 whiteSpace: 'nowrap',
+                flexShrink: 0,
                 transition: 'color 0.15s',
               }}
             >

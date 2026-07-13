@@ -22,6 +22,12 @@ const CARDS = [
     title: '大神追蹤',
     desc: '追蹤 YouTube、Podcast、X 大神最新內容',
   },
+  {
+    href: '/admin/announcement',
+    icon: '📢',
+    title: '公告管理',
+    desc: '設定登入後顯示給所有會員的公告訊息',
+  },
 ];
 
 export default function AdminPage() {

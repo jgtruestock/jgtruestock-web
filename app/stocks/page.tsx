@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import ActivityTracker from '@/components/ActivityTracker';
 import WelcomeModal from '@/components/WelcomeModal';
+import AnnouncementModal from '@/components/AnnouncementModal';
 
 interface MentionRecord {
   _id: string;
@@ -86,6 +87,7 @@ export default function StocksPage() {
   return (
     <div style={{ minHeight: '100vh', background: '#f0f3f2' }}>
       <WelcomeModal />
+      <AnnouncementModal />
       <Navbar />
       <ActivityTracker page="/stocks" />
 
