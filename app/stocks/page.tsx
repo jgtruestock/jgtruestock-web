@@ -18,6 +18,7 @@ interface MentionRecord {
   currentPrice: number;
   gainPct: number;
   mentionCount: number;
+  lastUpdatedAt?: string | null;
 }
 
 interface Stats {
@@ -28,7 +29,7 @@ interface Stats {
   lastUpdatedAt?: string | null;
 }
 
-type SortKey = 'gainPct' | 'mentionDate' | 'symbol';
+type SortKey = 'gainPct' | 'mentionDate' | 'symbol' | 'lastUpdatedAt';
 
 export default function StocksPage() {
   // Auth temporarily disabled for preview — TODO: re-enable before production
@@ -176,6 +177,7 @@ export default function StocksPage() {
                 backgroundPosition: 'right 8px center',
               }}
             >
+              <option value="lastUpdatedAt:desc">最新動態（最新→舊）</option>
               <option value="gainPct:desc">漲幅（高→低）</option>
               <option value="gainPct:asc">漲幅（低→高）</option>
               <option value="mentionDate:desc">提到日期（最新→舊）</option>

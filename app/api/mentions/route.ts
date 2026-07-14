@@ -132,16 +132,18 @@ export async function GET(req: NextRequest) {
       mentionCount: (rec.mentionCount as number) || 1,
       _fromMentionHistory: (rec._fromMentionHistory as boolean) || false,
       lastUpdatedAt: (() => {
-        // 顯示白名單新聞最新文章日期（不用點評更新時間）
+        // 顯示影子JG點評最後更新時間（優先），fallback 到白名單新聞日期
+        const commentaryDate = commentaryDateMap[rec.symbol as string];
         const newsDate = newsDateMap[rec.symbol as string];
-        const latest = newsDate || null;
+        const latest = commentaryDate || newsDate || null;
         return latest ? latest.toISOString().slice(0, 10) : null;
       })(),
     }));
 
     // 排序
     const sortKey = sortParam === 'mentionDate' ? 'mentionDate' :
-                    sortParam === 'symbol' ? 'symbol' : 'gainPct';
+                    sortParam === 'symbol' ? 'symbol' :
+                    sortParam === 'lastUpdatedAt' ? 'lastUpdatedAt' : 'gainPct';
     records.sort((a, b) => {
       const av = a[sortKey as keyof typeof a];
       const bv = b[sortKey as keyof typeof b];
