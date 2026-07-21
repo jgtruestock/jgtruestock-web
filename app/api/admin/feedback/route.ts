@@ -14,7 +14,6 @@ export async function GET() {
   const feedbacks = await db.collection('jg_feedback')
     .find({})
     .sort({ createdAt: -1 })
-    .limit(200)
     .toArray();
 
   return NextResponse.json({
