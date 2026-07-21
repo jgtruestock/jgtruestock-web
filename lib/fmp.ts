@@ -62,10 +62,11 @@ export async function getCurrentPrice(symbol: string): Promise<number | null> {
 
 export interface EarningsTranscript {
   symbol: string;
-  quarter: number;
+  quarter: number;   // mapped from FMP's `period` field ("Q1"→1, "Q2"→2, etc.)
   year: number;
   date: string;
   content: string;
+  period?: string;   // original FMP period string (kept for reference)
 }
 
 export interface StockNewsArticle {
@@ -113,7 +114,26 @@ export async function fetchEarningsTranscript(
       );
       if (!res.ok) continue;
       const data = await res.json();
-      if (Array.isArray(data) && data.length > 0) return data;
+      if (Array.isArray(data) && data.length > 0) {
+        // FMP stable API returns `period: "Q1"` instead of `quarter: number`.
+        // Normalize: map period → quarter so downstream code works correctly.
+        return data.map((item: Record<string, unknown>) => {
+          const periodStr = (item.period ?? item.quarter) as string | number | undefined;
+          let quarter: number = Number(item.quarter);
+          if (!quarter && typeof periodStr === 'string') {
+            const m = periodStr.match(/(\d+)/);
+            quarter = m ? parseInt(m[1], 10) : 0;
+          }
+          return {
+            symbol: item.symbol as string,
+            quarter,
+            year: item.year as number,
+            date: item.date as string,
+            content: (item.content as string) ?? '',
+            period: typeof periodStr === 'string' ? periodStr : String(periodStr ?? ''),
+          } as EarningsTranscript;
+        });
+      }
     } catch (err) {
       console.error(`[FMP] fetchEarningsTranscript ${symbol} ${y}Q${q} error:`, err);
     }

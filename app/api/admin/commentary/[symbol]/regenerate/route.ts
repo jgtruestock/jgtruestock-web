@@ -55,10 +55,15 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     const mentionClose = stockInfo?.mentionClose ?? 0;
     const latestClose = stockInfo?.latestClose ?? 0;
 
-    // 2. Fetch earnings transcript — check jg_transcripts cache first, then FMP
+    // 2. Fetch earnings transcript — check jg_transcripts cache (valid only), then FMP
     const db = await import('@/lib/mongodb').then(m => m.getJgtDb());
-    let cachedTranscript = await db.collection('jg_transcripts')
-      .findOne({ symbol }, { sort: { year: -1, quarter: -1 } }) as import('@/lib/fmp').EarningsTranscript | null;
+    const cachedDoc = await db.collection('jg_transcripts').findOne(
+      { symbol, year: { $ne: null }, quarter: { $ne: null }, content: { $exists: true, $ne: '' } },
+      { sort: { year: -1, quarter: -1 } }
+    );
+    let cachedTranscript = (cachedDoc && cachedDoc.content && cachedDoc.content.length > 100
+      ? cachedDoc
+      : null) as import('@/lib/fmp').EarningsTranscript | null;
 
     let transcript: import('@/lib/fmp').EarningsTranscript | null = null;
     const fmpTranscripts = await fetchEarningsTranscript(symbol);

@@ -100,10 +100,16 @@ export async function GET(request: Request) {
 
       console.log(`[refresh-commentary] ${symbol}: new news detected, regenerating commentary...`);
 
-      // 5. Get earnings transcript — prefer cached jg_transcripts, fall back to FMP
-      let latest = await jgtDb
+      // 5. Get earnings transcript — prefer cached jg_transcripts (valid only), fall back to FMP
+      const cachedDoc = await jgtDb
         .collection('jg_transcripts')
-        .findOne({ symbol }, { sort: { year: -1, quarter: -1 } }) as import('@/lib/fmp').EarningsTranscript | null;
+        .findOne(
+          { symbol, year: { $ne: null }, quarter: { $ne: null }, content: { $exists: true, $ne: '' } },
+          { sort: { year: -1, quarter: -1 } }
+        );
+      let latest = (cachedDoc && cachedDoc.content && cachedDoc.content.length > 100
+        ? cachedDoc
+        : null) as import('@/lib/fmp').EarningsTranscript | null;
 
       // 5b. FMP fallback if not cached
       if (!latest) {
