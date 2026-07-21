@@ -39,6 +39,11 @@ export interface GenerateCommentaryResult {
   shadowJGSummaryBody: string;    // 兩段式：Block B（影子JG總結）
 }
 
+export interface GenerateShadowJGOnlyResult {
+  shadowJGSummaryBody: string;
+  model: string;
+}
+
 export async function generateCommentary(
   symbol: string,
   transcript: EarningsTranscript | null,
@@ -370,6 +375,54 @@ ${newsSection}
 - 【官方申報】：有就列出，沒有就說沒有
 - 【影子JG總結】：⚠️ 這是強制段落，必須輸出「【影子JG總結】」這七個字（含全形括號）作為段落開頭，不能省略、不能改字。在腦子裡想清楚「對得上的、尚待觀察的、跑反的」，用流暢對話寫出來。對得上以✅、尚待觀察以⚠️、警訊以🔴開頭各一行。語氣就像 ASML 那個範例，但不要模仿 ASML，要對著這家公司。
 不要下交易建議。`;
+}
+
+// ─── Part B only: 只更新影子JG總結（法說會方向不變）────────────────────────────
+
+export async function generateShadowJGOnly(
+  symbol: string,
+  earningsDirectionContext: string,
+  news: StockNewsArticle[]
+): Promise<GenerateShadowJGOnlyResult> {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) throw new Error('ANTHROPIC_API_KEY is not set');
+
+  const client = new Anthropic({ apiKey });
+  const newsText = buildNewsText(news);
+
+  const prompt = `你是「影子JG」，一個有立場、有判斷力的台灣投資老手。
+
+以下是 ${symbol} 的法說會分析（這部分不需要重新生成，保持不動）：
+
+---
+${earningsDirectionContext.slice(0, 6000)}
+---
+
+根據以上法說會內容，以及下方最新 30 天新聞，只輸出【影子JG總結】這個段落。
+
+規則：
+- 第一行必須是「【影子JG總結】」（含全形括號，一字不差）
+- 對得上法說會承諾的用 ✅ 開頭
+- 尚待觀察的用 ⚠️ 開頭，尚待觀察的最後一行加「上面這些如果戰友有看到相關消息，記得告訴JG！」
+- 警訊用 🔴 開頭
+- 語氣口語，像跟朋友說話
+- 結論一句話收尾
+- 禁止 markdown 符號（##、**、--- 等）
+- 必須用繁體中文
+
+最近 30 天新聞：
+${newsText}`;
+
+  const response = await client.messages.create({
+    model: MODEL,
+    max_tokens: 3000,
+    messages: [{ role: 'user', content: prompt }],
+  });
+
+  const text = response.content[0].type === 'text' ? response.content[0].text : '';
+  const body = text.trim().startsWith('【影子JG總結】') ? text.trim() : `【影子JG總結】\n${text.trim()}`;
+
+  return { shadowJGSummaryBody: body, model: MODEL };
 }
 
 // ─── Response parser ──────────────────────────────────────────────────────────

@@ -9,7 +9,7 @@
 import { NextResponse } from 'next/server';
 import { get13fDb, getJgtDb } from '@/lib/mongodb';
 import { fetchEarningsTranscript } from '@/lib/fmp';
-import { generateCommentary } from '@/lib/ai/generateCommentary';
+import { generateCommentary, generateShadowJGOnly } from '@/lib/ai/generateCommentary';
 import { getStockNews } from '@/lib/db/stockNews';
 import type { JGStockNewsArticle } from '@/types/commentary';
 import type { StockNewsArticle } from '@/lib/fmp';
@@ -105,23 +105,21 @@ export async function GET(request: Request) {
         .collection('jg_transcripts')
         .findOne({ symbol }, { sort: { year: -1, quarter: -1 } }) as import('@/lib/fmp').EarningsTranscript | null;
 
+      // 5b. FMP fallback if not cached
       if (!latest) {
         console.log(`[refresh-commentary] ${symbol}: no cached transcript, fetching from FMP...`);
         const transcripts = await fetchEarningsTranscript(symbol);
-        if (!transcripts || transcripts.length === 0) {
-          console.log(`[refresh-commentary] ${symbol}: no transcript from FMP either, skipping`);
-          skipped++;
-          await sleep(SLEEP_MS);
-          continue;
+        if (transcripts && transcripts.length > 0) {
+          latest = transcripts[0];
+          await jgtDb.collection('jg_transcripts').updateOne(
+            { symbol, year: latest.year, quarter: latest.quarter },
+            { $set: { ...latest, cachedAt: new Date() } },
+            { upsert: true }
+          );
+          console.log(`[refresh-commentary] ${symbol}: cached transcript ${latest.year}-Q${latest.quarter}`);
+        } else {
+          console.log(`[refresh-commentary] ${symbol}: no transcript from FMP, will update Part B only`);
         }
-        latest = transcripts[0];
-        // Cache for future runs
-        await jgtDb.collection('jg_transcripts').updateOne(
-          { symbol, year: latest.year, quarter: latest.quarter },
-          { $set: { ...latest, cachedAt: new Date() } },
-          { upsert: true }
-        );
-        console.log(`[refresh-commentary] ${symbol}: cached transcript ${latest.year}-Q${latest.quarter}`);
       } else {
         console.log(`[refresh-commentary] ${symbol}: using cached transcript ${latest.year}-Q${latest.quarter}`);
       }
@@ -134,46 +132,73 @@ export async function GET(request: Request) {
         .map((a) => toStockNewsArticle(a, symbol));
 
       // 7. Retrieve mention date / prices from existing commentary (best-effort)
-      const mentionDate: string = existing.sourcesSummary?.latestEarningsDate ?? latest.date ?? '';
-      const mentionClose: number = existing.mentionClose ?? 0;
-      const latestClose: number = existing.latestClose ?? 0;
+      const mentionDate: string = existing.sourcesSummary?.latestEarningsDate ?? (latest?.date ?? '');
+      const mentionClose: number = (existing as any).mentionClose ?? 0;
+      const latestClose: number = (existing as any).latestClose ?? 0;
 
-      // 8. Generate commentary
-      const result = await generateCommentary(
-        symbol,
-        latest,
-        newsArticles,
-        mentionDate,
-        mentionClose,
-        latestClose
+      // 8. Decide: full regen vs Part B only
+      const existingEarningsBody = existing.earningsDirection?.body as string | undefined;
+      const existingLatestYear = existing.latestEarningsYear as number | undefined;
+      const existingLatestQuarter = existing.latestEarningsQuarter as number | undefined;
+      const isNewEarnings = latest && (
+        !existingLatestYear ||
+        latest.year > existingLatestYear ||
+        (latest.year === existingLatestYear && latest.quarter > (existingLatestQuarter ?? 0))
       );
 
-      // 9. Auto-publish (no draft)
+      let publishedTitle: string;
+      let publishedBody: string;
+      let earningsDirectionBody: string;
+      let shadowJGSummaryBody: string;
+      let keyPoints: import('@/lib/ai/generateCommentary').KeyPoint[];
+
+      if (latest && (isNewEarnings || !existingEarningsBody)) {
+        // Full regen: new quarter or no existing Part A
+        const result = await generateCommentary(symbol, latest, newsArticles, mentionDate, mentionClose, latestClose);
+        publishedTitle = result.title;
+        publishedBody = result.body;
+        earningsDirectionBody = result.earningsDirectionBody;
+        shadowJGSummaryBody = result.shadowJGSummaryBody;
+        keyPoints = result.keyPoints;
+      } else if (existingEarningsBody) {
+        // Same quarter or no transcript — keep Part A, only update Part B
+        earningsDirectionBody = existingEarningsBody;
+        keyPoints = (existing.keyPoints ?? []) as import('@/lib/ai/generateCommentary').KeyPoint[];
+        publishedTitle = (existing.publishedTitle ?? existing.draftTitle ?? `${symbol} 點評`) as string;
+        const shadowResult = await generateShadowJGOnly(symbol, earningsDirectionBody, newsArticles);
+        shadowJGSummaryBody = shadowResult.shadowJGSummaryBody;
+        publishedBody = earningsDirectionBody + '\n\n' + shadowJGSummaryBody;
+        console.log(`[refresh-commentary] ${symbol}: Part B only update (same/no transcript)`);
+      } else {
+        // No transcript, no existing Part A — skip
+        console.log(`[refresh-commentary] ${symbol}: no transcript and no existing Part A, skipping`);
+        skipped++;
+        await sleep(SLEEP_MS);
+        continue;
+      }
+
+      // 9. Auto-publish
       const now = new Date();
       await jgtDb.collection('jg_commentary').updateOne(
         { symbol },
         {
           $set: {
-            publishedTitle: result.title,
-            publishedBody: result.body,
+            publishedTitle,
+            publishedBody,
             publishedAt: now,
             status: 'published',
             updatedAt: now,
             lastNewsRefreshAt: now,
-            // 兩段式新格式
-            earningsDirection: {
-              body: result.earningsDirectionBody,
-              generatedAt: now,
-            },
-            shadowJGSummary: {
-              body: result.shadowJGSummaryBody,
-              generatedAt: now,
-            },
-            // KeyPoints
-            keyPoints: result.keyPoints,
+            earningsDirection: { body: earningsDirectionBody, generatedAt: now },
+            shadowJGSummary: { body: shadowJGSummaryBody, generatedAt: now },
+            keyPoints,
+            ...(latest && isNewEarnings ? {
+              latestEarningsYear: latest.year,
+              latestEarningsQuarter: latest.quarter,
+            } : {}),
           },
         },
-        { upsert: false } // 只更新現有的，不新增
+        { upsert: false }
       );
 
       console.log(`[refresh-commentary] ${symbol}: published`);
