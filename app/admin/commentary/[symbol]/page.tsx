@@ -6,6 +6,11 @@ import { useRouter, useParams } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import type { KeyPoint, PromiseCategory, PromiseStatus } from '@/types/commentary';
 
+const PRESET_TAGS = [
+  'AI/ML', '半導體', '雲端/SaaS', '能源', '核能', '太空',
+  '生技', '量子電腦', '網路安全', '金融科技', '基礎建設', '加密貨幣'
+];
+
 interface PublishHistoryEntry {
   publishedTitle: string | null;
   publishedBody: string | null;
@@ -82,6 +87,8 @@ export default function AdminCommentarySymbolPage() {
   const [publishing, setPublishing] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [message, setMessage] = useState('');
+  const [stockTags, setStockTags] = useState<string[]>([]);
+  const [savingTags, setSavingTags] = useState(false);
 
   const discordId = (session?.user as any)?.discordId;
   const email = (session?.user as any)?.email?.toLowerCase();
@@ -98,21 +105,55 @@ export default function AdminCommentarySymbolPage() {
   const fetchData = useCallback(async () => {
     if (!symbol) return;
     try {
-      const res = await fetch(`/api/admin/commentary/${symbol}`);
-      if (!res.ok) {
-        if (res.status === 403) { router.push('/'); return; }
+      const [commentaryRes, tagsRes] = await Promise.all([
+        fetch(`/api/admin/commentary/${symbol}`),
+        fetch(`/api/admin/stocks/${symbol}/tags`),
+      ]);
+      if (!commentaryRes.ok) {
+        if (commentaryRes.status === 403) { router.push('/'); return; }
         throw new Error('failed');
       }
-      const d: CommentaryDetail = await res.json();
+      const d: CommentaryDetail = await commentaryRes.json();
       setData(d);
       setEditTitle(d.draftTitle ?? '');
       setEditBody(d.draftBody ?? '');
+      if (tagsRes.ok) {
+        const tagsData = await tagsRes.json();
+        setStockTags(tagsData.tags || []);
+      }
     } catch (err) {
       console.error('fetch commentary detail:', err);
     } finally {
       setLoading(false);
     }
   }, [symbol, router]);
+
+  const handleToggleTag = (tag: string) => {
+    setStockTags(prev =>
+      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
+    );
+  };
+
+  const handleSaveTags = async () => {
+    setSavingTags(true);
+    try {
+      const res = await fetch(`/api/admin/stocks/${symbol}/tags`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tags: stockTags }),
+      });
+      if (res.ok) {
+        setMessage('✅ 標籤已儲存');
+      } else {
+        const d = await res.json();
+        setMessage(`❌ 標籤儲存失敗：${d.error}`);
+      }
+    } catch (err: any) {
+      setMessage(`❌ 錯誤：${err?.message}`);
+    } finally {
+      setSavingTags(false);
+    }
+  };
 
   useEffect(() => {
     if (status === 'authenticated') {
@@ -458,6 +499,58 @@ export default function AdminCommentarySymbolPage() {
             }}
           >
             {publishing ? '發布中...' : '📢 發布'}
+          </button>
+        </div>
+
+        {/* Tag Editor */}
+        <div
+          style={{
+            background: '#fff',
+            borderRadius: 10,
+            border: '1px solid #E8E4DC',
+            padding: '24px',
+            marginBottom: 20,
+          }}
+        >
+          <h2 style={{ fontSize: 15, fontWeight: 600, color: '#1A1A1A', marginBottom: 14, marginTop: 0 }}>
+            🏷️ 題材標籤
+          </h2>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
+            {PRESET_TAGS.map(tag => (
+              <button
+                key={tag}
+                onClick={() => handleToggleTag(tag)}
+                style={{
+                  padding: '4px 12px',
+                  borderRadius: 14,
+                  border: '1px solid #D5D0C5',
+                  background: stockTags.includes(tag) ? '#cc1a22' : '#fff',
+                  color: stockTags.includes(tag) ? '#fff' : '#555',
+                  fontSize: 13,
+                  cursor: 'pointer',
+                  fontFamily: "'Noto Sans TC', sans-serif",
+                  transition: 'background 0.15s, color 0.15s',
+                }}
+              >
+                {tag}
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={handleSaveTags}
+            disabled={savingTags}
+            style={{
+              padding: '8px 18px',
+              borderRadius: 7,
+              border: 'none',
+              background: '#1A1A1A',
+              color: '#fff',
+              cursor: savingTags ? 'not-allowed' : 'pointer',
+              fontSize: 14,
+              fontWeight: 600,
+            }}
+          >
+            {savingTags ? '儲存中...' : '💾 儲存標籤'}
           </button>
         </div>
 

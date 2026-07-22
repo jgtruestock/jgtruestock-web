@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { get13fDb, getJgtDb } from '@/lib/mongodb';
+import { getTagsMap } from '@/lib/db/stockTags';
 
 export async function GET(req: NextRequest) {
   try {
@@ -83,7 +84,7 @@ export async function GET(req: NextRequest) {
     // 批量查詢 commentary 和 stock_news 的最新更新時間
     const allSymbolsList = allRecords.map(r => r.symbol as string).filter(Boolean);
 
-    const [commentaryDocs, newsDocs] = await Promise.all([
+    const [commentaryDocs, newsDocs, tagsMap] = await Promise.all([
       jgtDb.collection('jg_commentary')
         .find({ symbol: { $in: allSymbolsList } })
         .project<{ symbol: string; updatedAt: Date }>({ symbol: 1, updatedAt: 1, _id: 0 })
@@ -92,6 +93,7 @@ export async function GET(req: NextRequest) {
         .find({ symbol: { $in: allSymbolsList } })
         .project<{ symbol: string; articles: Array<{ publishedDate: string }> }>({ symbol: 1, articles: 1, _id: 0 })
         .toArray(),
+      getTagsMap(allSymbolsList),
     ]);
 
     const commentaryDateMap: Record<string, Date> = {};
@@ -131,6 +133,7 @@ export async function GET(req: NextRequest) {
       source: (rec.source as string) || 'member-channel',
       mentionCount: (rec.mentionCount as number) || 1,
       _fromMentionHistory: (rec._fromMentionHistory as boolean) || false,
+      tags: tagsMap[rec.symbol as string] || [],
       lastUpdatedAt: (() => {
         // 顯示影子JG點評最後更新時間（優先），fallback 到白名單新聞日期
         const commentaryDate = commentaryDateMap[rec.symbol as string];
