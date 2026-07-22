@@ -11,6 +11,7 @@ import { getStockPressReleases, upsertStockPressReleases } from '@/lib/db/stockP
 import { fetchStockNews, fetchEarningsTranscript, fetchSecFilings, fetchPressReleases, EarningsTranscript } from '@/lib/fmp';
 import Navbar from '@/components/Navbar';
 import ActivityTracker from '@/components/ActivityTracker';
+import TradingViewChart from '@/components/TradingViewChartWrapper';
 import type { JGStockNewsArticle, SecFiling, PressRelease } from '@/types/commentary';
 
 interface StockPageProps {
@@ -665,6 +666,8 @@ export default async function StockDetailPage({ params }: StockPageProps) {
         }}
       >
         <StockHeader symbol={upperSymbol} stockInfo={stockInfo} />
+
+        <TradingViewChart symbol={upperSymbol} />
 
         <CommentarySection
           title={isPublished ? commentary?.publishedTitle : null}
