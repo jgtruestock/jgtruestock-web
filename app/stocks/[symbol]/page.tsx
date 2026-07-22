@@ -667,7 +667,16 @@ export default async function StockDetailPage({ params }: StockPageProps) {
       >
         <StockHeader symbol={upperSymbol} stockInfo={stockInfo} />
 
-        <TradingViewChart symbol={upperSymbol} />
+        {/* TradingView Chart - inline iframe for reliability */}
+        <div style={{ marginBottom: 28, borderRadius: 2, overflow: 'hidden', border: '1px solid #E0DCD6' }}>
+          <iframe
+            src={`https://s.tradingview.com/widgetembed/?autosize=1&symbol=NASDAQ%3A${upperSymbol}&interval=W&timezone=Asia%2FTaipei&theme=light&style=1&locale=zh_TW&range=24M&hide_side_toolbar=1&allow_symbol_change=0&save_image=0&calendar=0&support_host=https%3A%2F%2Fwww.tradingview.com`}
+            width="100%"
+            height="450"
+            style={{ border: 'none', display: 'block' }}
+            title={`${upperSymbol} K線圖`}
+          />
+        </div>
 
         <CommentarySection
           title={isPublished ? commentary?.publishedTitle : null}
