@@ -8,9 +8,28 @@ export default function VerifyPage() {
   const router = useRouter();
   const { update } = useSession();
   const [channelUrl, setChannelUrl] = useState('');
+  const [urlWarning, setUrlWarning] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+
+  function detectUrlIssue(url: string): string {
+    if (!url.trim()) return '';
+    const lower = url.toLowerCase();
+    if (lower.includes('@jgtruestock') || lower.includes('jgtruestock.com')) {
+      return '⚠️ 這是 JG 的頻道網址，請填你自己的 YouTube 頻道';
+    }
+    if (lower.includes('/watch?v=') || lower.includes('/live/') || lower.includes('/shorts/') || lower.includes('youtu.be/')) {
+      return '⚠️ 這是影片連結，請填你的「頻道」網址（點頭像 → 查看頻道）';
+    }
+    if (lower.includes('studio.youtube.com')) {
+      return '⚠️ 這是 YouTube Studio 後台，請填你的公開頻道網址';
+    }
+    if (lower.includes('redirect?') || lower.includes('si=')) {
+      return '⚠️ 這個連結包含分享參數，請直接複製頻道網址列的網址';
+    }
+    return '';
+  }
 
   const handleSubmit = async () => {
     if (!channelUrl.trim()) {
@@ -29,7 +48,18 @@ export default function VerifyPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || '驗證失敗，請稍後再試');
+        const rawError: string = data.error || '';
+        let friendlyError = rawError || '驗證失敗，請稍後再試';
+
+        if (rawError.includes('已被其他帳號綁定')) {
+          friendlyError = '你輸入的頻道已被其他帳號綁定。\n常見原因：你填了 JG 的頻道（@jgtruestock），請改填你自己的 YouTube 頻道網址。\n如果確認填的是自己的頻道，請換帳號登入，或聯繫管理員（vip@jgtruestock.com.tw）。';
+        } else if (rawError.includes('不在會員名單') || rawError.includes('not_in_members')) {
+          friendlyError = '找不到這個頻道的 450 會員記錄。\n請確認：\n① 你填的是自己訂閱 JG 頻道會員的那個 YouTube 帳號的頻道\n② 你登入的 Google 帳號跟 YouTube 會員是同一個';
+        } else if (rawError.includes('找不到這個頻道')) {
+          friendlyError = '找不到這個頻道。常見原因：\n① 貼的是影片連結而不是頻道網址\n② 網址格式有誤，請確認是 youtube.com/@你的頻道名稱 或 youtube.com/channel/UC...';
+        }
+
+        setError(friendlyError);
         setLoading(false);
         return;
       }
@@ -126,12 +156,32 @@ export default function VerifyPage() {
                     fontSize: 16,
                     fontWeight: 700,
                     color: '#EDEDEB',
-                    marginBottom: 20,
+                    marginBottom: 16,
                     textAlign: 'center',
                   }}
                 >
                   請貼上你的 YouTube 頻道連結
                 </h2>
+
+                {/* Warning box */}
+                <div style={{
+                  padding: '10px 12px',
+                  background: 'rgba(204,26,34,0.08)',
+                  border: '1px solid rgba(204,26,34,0.25)',
+                  borderRadius: 6,
+                  marginBottom: 20,
+                  fontSize: 12,
+                  color: 'oklch(0.65 0.01 65)',
+                  lineHeight: 1.7,
+                }}>
+                  <span style={{ color: '#cc6666', fontWeight: 700 }}>⚠️ 注意：</span>
+                  {' '}請填<span style={{ color: '#EDEDEB', fontWeight: 600 }}>你自己的</span>頻道網址，不是 JG 的頻道，也不是影片連結
+                  <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    <span>✅ 正確：<span style={{ color: '#c9a84c', fontFamily: 'monospace', fontSize: 11 }}>youtube.com/@你的頻道</span></span>
+                    <span>❌ 錯誤：<span style={{ color: 'oklch(0.45 0.01 65)', fontFamily: 'monospace', fontSize: 11 }}>youtube.com/@jgtruestock</span>（JG 的頻道）</span>
+                    <span>❌ 錯誤：<span style={{ color: 'oklch(0.45 0.01 65)', fontFamily: 'monospace', fontSize: 11 }}>youtube.com/watch?v=...</span>（影片連結）</span>
+                  </div>
+                </div>
 
                 {/* Steps - text list with icons */}
                 <div style={{ marginBottom: 24 }}>
@@ -250,6 +300,7 @@ export default function VerifyPage() {
                   value={channelUrl}
                   onChange={(e) => {
                     setChannelUrl(e.target.value);
+                    setUrlWarning(detectUrlIssue(e.target.value));
                     if (error) setError('');
                   }}
                   placeholder="貼上你的 YouTube 頻道連結"
@@ -279,6 +330,23 @@ export default function VerifyPage() {
                   }}
                 />
 
+                {/* URL Warning */}
+                {urlWarning && !error && (
+                  <p style={{
+                    fontSize: 12,
+                    color: '#c9a84c',
+                    marginTop: 4,
+                    marginBottom: 4,
+                    lineHeight: 1.6,
+                    padding: '6px 10px',
+                    background: 'rgba(201,168,76,0.08)',
+                    borderRadius: 4,
+                    border: '1px solid rgba(201,168,76,0.25)',
+                  }}>
+                    {urlWarning}
+                  </p>
+                )}
+
                 {/* Error */}
                 {error && (
                   <p
@@ -287,7 +355,8 @@ export default function VerifyPage() {
                       color: '#cc1a22',
                       marginTop: 4,
                       marginBottom: 8,
-                      lineHeight: 1.6,
+                      lineHeight: 1.7,
+                      whiteSpace: 'pre-line',
                     }}
                   >
                     {error}
@@ -380,6 +449,12 @@ export default function VerifyPage() {
                   >
                     切換帳號
                   </button>
+                </p>
+                <p style={{ fontSize: 11, color: 'oklch(0.38 0.01 65)', textAlign: 'center', marginTop: 6 }}>
+                  換過 Google 帳號或有其他問題？
+                  <a href="mailto:vip@jgtruestock.com.tw" style={{ color: 'oklch(0.50 0.01 65)', textDecoration: 'underline', marginLeft: 4 }}>
+                    聯絡管理員
+                  </a>
                 </p>
               </>
             )}
