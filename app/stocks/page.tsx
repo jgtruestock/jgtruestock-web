@@ -19,6 +19,7 @@ interface MentionRecord {
   gainPct: number;
   mentionCount: number;
   lastUpdatedAt?: string | null;
+  tags: string[];
 }
 
 interface Stats {
@@ -41,6 +42,8 @@ export default function StocksPage() {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [loading, setLoading] = useState(true);
   const [navigating, setNavigating] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const [activeTag, setActiveTag] = useState<string | null>(null);
 
   useEffect(() => {
     const seen = localStorage.getItem('jg_guide_seen');
@@ -118,6 +121,28 @@ export default function StocksPage() {
           </div>
         </div>
 
+        {/* Search Bar */}
+        <div style={{ marginBottom: 12 }}>
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="搜尋代號或公司名稱..."
+            style={{
+              width: '100%',
+              padding: '9px 14px',
+              border: '1px solid #D5D0C8',
+              borderRadius: 6,
+              background: '#FFFFFF',
+              fontFamily: "'Noto Sans TC', sans-serif",
+              fontSize: 12,
+              color: '#333',
+              outline: 'none',
+              boxSizing: 'border-box',
+            }}
+          />
+        </div>
+
         {/* Stats bar + Sort */}
         <div
           style={{
@@ -186,16 +211,73 @@ export default function StocksPage() {
           </div>
         </div>
 
-        {loading ? (
-          <div style={{ padding: '60px 0', textAlign: 'center', color: '#888', fontSize: 14 }}>
-            載入中...
-          </div>
-        ) : records.length === 0 ? (
-          <div style={{ padding: '60px 0', textAlign: 'center', color: '#888', fontSize: 14 }}>
-            目前尚無追蹤記錄
-          </div>
-        ) : (
-          <>
+        {/* Tag Filter */}
+        {(() => {
+          const usedTags = Array.from(new Set(records.flatMap(r => r.tags || []))).sort();
+          if (usedTags.length === 0) return null;
+          return (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
+              <button
+                onClick={() => setActiveTag(null)}
+                style={{
+                  padding: '3px 10px',
+                  borderRadius: 12,
+                  border: '1px solid #D5D0C8',
+                  background: activeTag === null ? '#cc1a22' : '#FFFFFF',
+                  color: activeTag === null ? '#fff' : '#555',
+                  fontSize: 11,
+                  cursor: 'pointer',
+                  fontFamily: "'Noto Sans TC', sans-serif",
+                }}
+              >
+                全部
+              </button>
+              {usedTags.map(tag => (
+                <button
+                  key={tag}
+                  onClick={() => setActiveTag(activeTag === tag ? null : tag)}
+                  style={{
+                    padding: '3px 10px',
+                    borderRadius: 12,
+                    border: '1px solid #D5D0C8',
+                    background: activeTag === tag ? '#cc1a22' : '#FFFFFF',
+                    color: activeTag === tag ? '#fff' : '#555',
+                    fontSize: 11,
+                    cursor: 'pointer',
+                    fontFamily: "'Noto Sans TC', sans-serif",
+                  }}
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+          );
+        })()}
+
+        {(() => {
+          const filteredRecords = records
+            .filter(r => !search.trim() ||
+              r.symbol.toUpperCase().includes(search.trim().toUpperCase()) ||
+              r.companyName.toLowerCase().includes(search.trim().toLowerCase())
+            )
+            .filter(r => !activeTag || (r.tags || []).includes(activeTag));
+
+          return (
+            <>
+              {loading ? (
+                <div style={{ padding: '60px 0', textAlign: 'center', color: '#888', fontSize: 14 }}>
+                  載入中...
+                </div>
+              ) : records.length === 0 ? (
+                <div style={{ padding: '60px 0', textAlign: 'center', color: '#888', fontSize: 14 }}>
+                  目前尚無追蹤記錄
+                </div>
+              ) : filteredRecords.length === 0 ? (
+                <div style={{ padding: '60px 0', textAlign: 'center', color: '#888', fontSize: 14 }}>
+                  找不到 &ldquo;{search || activeTag}&rdquo;
+                </div>
+              ) : (
+                <>
             {/* Desktop Table */}
             <table
               className="stock-table"
@@ -225,7 +307,7 @@ export default function StocksPage() {
                 </tr>
               </thead>
               <tbody>
-                {records.map((rec) => {
+                {filteredRecords.map((rec) => {
                   const gain = formatGain(rec.gainPct);
                   return (
                     <tr
@@ -264,12 +346,23 @@ export default function StocksPage() {
                           fontSize: 12,
                           color: '#888',
                           maxWidth: 160,
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
                         }}
                       >
-                        {rec.companyName}
+                        <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{rec.companyName}</div>
+                        {rec.tags && rec.tags.length > 0 && (
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3, marginTop: 2 }}>
+                            {rec.tags.map(tag => (
+                              <span key={tag} style={{
+                                fontSize: 10,
+                                color: '#c9a84c',
+                                border: '1px solid #c9a84c',
+                                borderRadius: 3,
+                                padding: '0 4px',
+                                lineHeight: '16px',
+                              }}>{tag}</span>
+                            ))}
+                          </div>
+                        )}
                       </td>
                       <td style={{ padding: '10px 8px', textAlign: 'center' }}>
                         <span
@@ -382,7 +475,7 @@ export default function StocksPage() {
 
             {/* Mobile List */}
             <div className="stock-list-mobile">
-              {records.map((rec) => {
+              {filteredRecords.map((rec) => {
                 const gain = formatGain(rec.gainPct);
                 return (
                   <div
@@ -474,6 +567,20 @@ export default function StocksPage() {
                       }}
                     >
                       <span>{rec.companyName} · ${rec.priceAtMention.toFixed(2)} → ${rec.currentPrice.toFixed(2)}</span>
+                      {rec.tags && rec.tags.length > 0 && (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3, marginTop: 2 }}>
+                          {rec.tags.map(tag => (
+                            <span key={tag} style={{
+                              fontSize: 10,
+                              color: '#c9a84c',
+                              border: '1px solid #c9a84c',
+                              borderRadius: 3,
+                              padding: '0 4px',
+                              lineHeight: '16px',
+                            }}>{tag}</span>
+                          ))}
+                        </div>
+                      )}
                       {rec.lastUpdatedAt && (
                         <span style={{
                           fontFamily: "'Raleway', sans-serif",
@@ -490,8 +597,11 @@ export default function StocksPage() {
                 );
               })}
             </div>
-          </>
-        )}
+                </>
+              )}
+            </>
+          );
+        })()}
       </div>
 
       <style jsx global>{`
