@@ -11,7 +11,7 @@ import { getStockPressReleases, upsertStockPressReleases } from '@/lib/db/stockP
 import { fetchStockNews, fetchEarningsTranscript, fetchSecFilings, fetchPressReleases, EarningsTranscript } from '@/lib/fmp';
 import Navbar from '@/components/Navbar';
 import ActivityTracker from '@/components/ActivityTracker';
-import TradingViewChart from '@/components/TradingViewChartWrapper';
+import TradingViewChart from '@/components/TradingViewChart';
 import type { JGStockNewsArticle, SecFiling, PressRelease } from '@/types/commentary';
 
 interface StockPageProps {
