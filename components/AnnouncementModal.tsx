@@ -6,10 +6,12 @@ interface Announcement {
   title: string;
   content: string;
   active: boolean;
+  published?: boolean;
 }
 
 export default function AnnouncementModal() {
-  const [ann, setAnn] = useState<Announcement | null>(null);
+  const [queue, setQueue] = useState<Announcement[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [visible, setVisible] = useState(false);
   const [ctaHovered, setCtaHovered] = useState(false);
 
@@ -17,22 +19,39 @@ export default function AnnouncementModal() {
     fetch('/api/announcement')
       .then(r => r.json())
       .then(data => {
-        const a = data.announcement;
-        if (!a || !a.active) return;
-        const key = `jg_ann_seen_${a._id}`;
-        if (!localStorage.getItem(key)) {
-          setAnn(a);
+        const all: Announcement[] = data.announcements ?? (data.announcement ? [data.announcement] : []);
+        // 過濾出未讀的，保持舊→新順序
+        const unread = all.filter(a => !localStorage.getItem(`jg_ann_seen_${a._id}`));
+        if (unread.length > 0) {
+          setQueue(unread);
+          setCurrentIndex(0);
           setVisible(true);
         }
       });
   }, []);
 
+  const current = queue[currentIndex] ?? null;
+  const total = queue.length;
+
   function handleClose() {
-    if (ann) localStorage.setItem(`jg_ann_seen_${ann._id}`, '1');
-    setVisible(false);
+    if (current) {
+      localStorage.setItem(`jg_ann_seen_${current._id}`, '1');
+      // 後台紀錄已讀（fire-and-forget）
+      fetch('/api/announcement/read', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ announcementId: current._id }),
+      }).catch(() => {}); // 靜默失敗，不影響 UX
+    }
+    const nextIndex = currentIndex + 1;
+    if (nextIndex < total) {
+      setCurrentIndex(nextIndex);
+    } else {
+      setVisible(false);
+    }
   }
 
-  if (!visible || !ann) return null;
+  if (!visible || !current) return null;
 
   return (
     <div
@@ -62,29 +81,49 @@ export default function AnnouncementModal() {
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Close button */}
-        <button
-          onClick={handleClose}
+        {/* 計數器 & Close button */}
+        <div
           style={{
             position: 'absolute',
             top: 16,
             right: 16,
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            color: '#555',
-            lineHeight: 1,
-            padding: 4,
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
+            gap: 10,
           }}
-          aria-label="關閉"
         >
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M3 3l12 12M15 3L3 15" stroke="#666" strokeWidth="1.5" strokeLinecap="round" />
-          </svg>
-        </button>
+          {total > 1 && (
+            <span
+              style={{
+                fontSize: 12,
+                color: '#888',
+                fontFamily: "'Noto Sans TC', sans-serif",
+                letterSpacing: 0.5,
+              }}
+            >
+              {currentIndex + 1} / {total}
+            </span>
+          )}
+          <button
+            onClick={handleClose}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: '#555',
+              lineHeight: 1,
+              padding: 4,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+            aria-label="關閉"
+          >
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3 3l12 12M15 3L3 15" stroke="#666" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
 
         {/* Title */}
         <h2
@@ -95,9 +134,10 @@ export default function AnnouncementModal() {
             color: '#c9a84c',
             marginBottom: 8,
             lineHeight: 1.35,
+            paddingRight: total > 1 ? 80 : 40,
           }}
         >
-          {ann.title}
+          {current.title}
         </h2>
 
         {/* Gold divider */}
@@ -119,7 +159,7 @@ export default function AnnouncementModal() {
             marginBottom: 28,
           }}
         >
-          {ann.content}
+          {current.content}
         </p>
 
         {/* CTA Button */}
@@ -143,7 +183,7 @@ export default function AnnouncementModal() {
           onMouseEnter={() => setCtaHovered(true)}
           onMouseLeave={() => setCtaHovered(false)}
         >
-          好，知道了 →
+          {currentIndex + 1 < total ? '好，下一則 →' : '好，知道了 →'}
         </button>
       </div>
     </div>

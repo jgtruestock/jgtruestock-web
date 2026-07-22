@@ -5,6 +5,7 @@ export interface Announcement {
   title: string;
   content: string; // 支援換行（\n），前台用 white-space: pre-line 顯示
   active: boolean;
+  published?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -37,8 +38,18 @@ export async function insertNewAnnouncement(data: { title: string; content: stri
   const db = await getJgtDb();
   const col = db.collection('announcements');
   const now = new Date();
-  // 先把所有舊公告設為停用
-  await col.updateMany({}, { $set: { active: false, updatedAt: now } });
-  const result = await col.insertOne({ ...data, active: true, createdAt: now, updatedAt: now });
-  return { ...data, active: true, createdAt: now, updatedAt: now, _id: result.insertedId.toString() };
+  // 不再 unpublish 舊公告，讓所有用戶都能看到所有歷史公告
+  const result = await col.insertOne({ ...data, active: true, published: true, createdAt: now, updatedAt: now });
+  return { ...data, active: true, published: true, createdAt: now, updatedAt: now, _id: result.insertedId.toString() };
+}
+
+// 取得所有已發佈的公告，按 createdAt 升序（舊→新）
+export async function getPublishedAnnouncements(): Promise<Announcement[]> {
+  const db = await getJgtDb();
+  const docs = await db
+    .collection('announcements')
+    .find({ published: true })
+    .sort({ createdAt: 1 })
+    .toArray();
+  return docs.map(doc => ({ ...doc, _id: doc._id.toString() })) as Announcement[];
 }
