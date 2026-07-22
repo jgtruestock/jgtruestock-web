@@ -62,7 +62,6 @@ export default function TradingViewChart({ symbol, exchange = 'NASDAQ' }: Tradin
         id={containerId}
         ref={containerRef}
         className="tradingview-widget-container"
-        style={{ height: 0 }} // height controlled by CSS below
       />
       <style>{`
         #${containerId} {
