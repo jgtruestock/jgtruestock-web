@@ -1,53 +1,64 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 
 interface TradingViewChartProps {
   symbol: string;
   exchange?: string;
 }
 
+declare global {
+  interface Window {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    TradingView: any;
+  }
+}
+
 export default function TradingViewChart({ symbol, exchange = 'NASDAQ' }: TradingViewChartProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
   const containerId = `tv-chart-${symbol.toLowerCase()}`;
 
   useEffect(() => {
-    const container = containerRef.current;
+    const container = document.getElementById(containerId);
     if (!container) return;
 
-    // Clear previous content
     container.innerHTML = '';
 
-    const widgetDiv = document.createElement('div');
-    widgetDiv.className = 'tradingview-widget-container__widget';
-    container.appendChild(widgetDiv);
+    const initWidget = () => {
+      if (typeof window.TradingView === 'undefined') return;
+      new window.TradingView.widget({
+        autosize: true,
+        symbol: `${exchange}:${symbol}`,
+        interval: 'W',
+        timezone: 'Asia/Taipei',
+        theme: 'light',
+        style: '1',
+        locale: 'zh_TW',
+        range: '24M',
+        hide_side_toolbar: true,
+        allow_symbol_change: false,
+        container_id: containerId,
+      });
+    };
+
+    // If tv.js already loaded (navigating between stocks), init directly
+    if (typeof window.TradingView !== 'undefined') {
+      initWidget();
+      return;
+    }
 
     const script = document.createElement('script');
-    script.type = 'text/javascript';
-    script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
+    script.id = 'tradingview-tv-js';
+    script.src = 'https://s3.tradingview.com/tv.js';
     script.async = true;
-    script.innerHTML = JSON.stringify({
-      autosize: true,
-      symbol: `${exchange}:${symbol}`,
-      interval: 'W',
-      timezone: 'Asia/Taipei',
-      theme: 'light',
-      style: '1',
-      locale: 'zh_TW',
-      range: '24M',
-      hide_side_toolbar: true,
-      allow_symbol_change: false,
-      calendar: false,
-      support_host: 'https://www.tradingview.com',
-    });
-    container.appendChild(script);
+    script.onload = initWidget;
+    document.head.appendChild(script);
 
     return () => {
-      if (container) {
-        container.innerHTML = '';
-      }
+      const existing = document.getElementById('tradingview-tv-js');
+      if (existing) existing.remove();
+      if (container) container.innerHTML = '';
     };
-  }, [symbol, exchange]);
+  }, [symbol, exchange, containerId]);
 
   return (
     <div
@@ -58,19 +69,10 @@ export default function TradingViewChart({ symbol, exchange = 'NASDAQ' }: Tradin
         border: '1px solid #E0DCD6',
       }}
     >
-      <div
-        id={containerId}
-        ref={containerRef}
-        className="tradingview-widget-container"
-      />
+      <div id={containerId} style={{ height: 450 }} />
       <style>{`
-        #${containerId} {
-          height: 450px;
-        }
         @media (max-width: 768px) {
-          #${containerId} {
-            height: 320px;
-          }
+          #${containerId} { height: 320px !important; }
         }
       `}</style>
     </div>
