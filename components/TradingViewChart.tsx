@@ -1,64 +1,49 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useMemo } from 'react';
 
 interface TradingViewChartProps {
   symbol: string;
   exchange?: string;
 }
 
-declare global {
-  interface Window {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    TradingView: any;
-  }
+// FMP exchange codes → TradingView exchange names
+function normalizeTVExchange(exchange?: string): string {
+  if (!exchange) return 'NASDAQ';
+  const map: Record<string, string> = {
+    NMS: 'NASDAQ',
+    NGM: 'NASDAQ',
+    NCM: 'NASDAQ',
+    NYQ: 'NYSE',
+    ASE: 'AMEX',
+    PCX: 'NYSEARCA',
+    BTS: 'NASDAQ',
+    NASDAQ: 'NASDAQ',
+    NYSE: 'NYSE',
+  };
+  return map[exchange.toUpperCase()] || 'NASDAQ';
 }
 
-export default function TradingViewChart({ symbol, exchange = 'NASDAQ' }: TradingViewChartProps) {
-  const containerId = `tv-chart-${symbol.toLowerCase()}`;
-
-  useEffect(() => {
-    const container = document.getElementById(containerId);
-    if (!container) return;
-
-    container.innerHTML = '';
-
-    const initWidget = () => {
-      if (typeof window.TradingView === 'undefined') return;
-      new window.TradingView.widget({
-        autosize: true,
-        symbol: `${exchange}:${symbol}`,
-        interval: 'W',
-        timezone: 'Asia/Taipei',
-        theme: 'light',
-        style: '1',
-        locale: 'zh_TW',
-        range: '24M',
-        hide_side_toolbar: true,
-        allow_symbol_change: false,
-        container_id: containerId,
-      });
-    };
-
-    // If tv.js already loaded (navigating between stocks), init directly
-    if (typeof window.TradingView !== 'undefined') {
-      initWidget();
-      return;
-    }
-
-    const script = document.createElement('script');
-    script.id = 'tradingview-tv-js';
-    script.src = 'https://s3.tradingview.com/tv.js';
-    script.async = true;
-    script.onload = initWidget;
-    document.head.appendChild(script);
-
-    return () => {
-      const existing = document.getElementById('tradingview-tv-js');
-      if (existing) existing.remove();
-      if (container) container.innerHTML = '';
-    };
-  }, [symbol, exchange, containerId]);
+export default function TradingViewChart({ symbol, exchange }: TradingViewChartProps) {
+  const src = useMemo(() => {
+    const tvExchange = normalizeTVExchange(exchange);
+    const params = new URLSearchParams({
+      autosize: '1',
+      symbol: `${tvExchange}:${symbol}`,
+      interval: 'W',
+      timezone: 'Asia/Taipei',
+      theme: 'light',
+      style: '1',
+      locale: 'zh_TW',
+      range: '24M',
+      hide_side_toolbar: '1',
+      allow_symbol_change: '0',
+      save_image: '0',
+      calendar: '0',
+      support_host: 'https://www.tradingview.com',
+    });
+    return `https://s.tradingview.com/widgetembed/?${params.toString()}`;
+  }, [symbol, exchange]);
 
   return (
     <div
@@ -69,10 +54,16 @@ export default function TradingViewChart({ symbol, exchange = 'NASDAQ' }: Tradin
         border: '1px solid #E0DCD6',
       }}
     >
-      <div id={containerId} style={{ height: 450 }} />
+      <iframe
+        src={src}
+        style={{ width: '100%', height: 450, border: 'none', display: 'block' }}
+        allowFullScreen
+        loading="lazy"
+        title={`${symbol} K線圖`}
+      />
       <style>{`
         @media (max-width: 768px) {
-          #${containerId} { height: 320px !important; }
+          iframe[title="${symbol} K線圖"] { height: 320px !important; }
         }
       `}</style>
     </div>
