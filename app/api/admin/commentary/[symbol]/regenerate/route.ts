@@ -165,7 +165,8 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
         latestEarningsYear: transcript.year,
         latestEarningsQuarter: transcript.quarter,
       } : {}),
-      status: 'draft',
+      // 只有在「尚未發布」時才設定為 draft，避免覆蓋已發布的點評
+      ...(existingCommentary?.status !== 'published' ? { status: 'draft' } : {}),
       sourcesSummary: {
         earningsTranscriptCount: transcript ? 1 : 0,
         newsCount: rawNews.length,
