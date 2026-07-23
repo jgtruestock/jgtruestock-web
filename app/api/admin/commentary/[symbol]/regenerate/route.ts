@@ -9,7 +9,7 @@ import { get13fDb } from '@/lib/mongodb';
 import { fetchEarningsTranscript, fetchStockNews, StockNewsArticle } from '@/lib/fmp';
 import { getStockNews } from '@/lib/db/stockNews';
 import type { JGStockNewsArticle } from '@/types/commentary';
-import { generateCommentary, generateShadowJGOnly } from '@/lib/ai/generateCommentary';
+import { generateCommentary, generateShadowJGOnly, generateBlockB } from '@/lib/ai/generateCommentary';
 
 const NEWS_SOURCE_WHITELIST = [
   'reuters', 'wsj', 'marketwatch', 'businesswire', 'business wire',
@@ -125,10 +125,15 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     let earningsDirectionBody: string;
     let shadowJGSummaryBody: string;
 
+    let blockBBody: string | undefined;
+
     if (transcript && (isNewEarnings || !existingEarningsDirection)) {
       // Full regeneration: new transcript or no existing Part A
       const result = await generateCommentary(symbol, transcript, rawNews, mentionDate, mentionClose, latestClose);
       ({ title, body, model, keyPoints, earningsDirectionBody, shadowJGSummaryBody } = result);
+      // 額外生成 Block B（新聞摘要）並存入 DB
+      const blockBResult = await generateBlockB(symbol, rawNews);
+      blockBBody = blockBResult.blockBBody;
     } else if (existingEarningsDirection) {
       // Part A unchanged (same earnings quarter or no new transcript)
       // Only regenerate Part B (影子JG總結) with latest news
@@ -157,6 +162,12 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
         body: earningsDirectionBody,
         generatedAt: now,
       },
+      ...(blockBBody !== undefined ? {
+        newsDigest: {
+          body: blockBBody,
+          generatedAt: now,
+        },
+      } : {}),
       shadowJGSummary: {
         body: shadowJGSummaryBody,
         generatedAt: now,

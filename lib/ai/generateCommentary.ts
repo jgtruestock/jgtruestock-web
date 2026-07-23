@@ -253,8 +253,11 @@ function buildNewsText(news: StockNewsArticle[]): string {
   if (!news || news.length === 0) return '（無新聞資料）';
   return news
     .slice(0, 30)
-    .map((n, i) => `${i + 1}. [${n.publishedDate?.slice(0, 10) ?? ''}] ${n.title}（${n.site ?? ''}）`)
-    .join('\n');
+    .map((n, i) => {
+      const snippet = n.text ? n.text.slice(0, 150).replace(/\n/g, ' ') : '';
+      return `${i + 1}. [${n.publishedDate?.slice(0, 10) ?? ''}] ${n.title}（${n.site ?? ''}）${snippet ? `\n   摘要：${snippet}` : ''}`;
+    })
+    .join('\n\n');
 }
 
 function parseJsonSafe<T>(text: string, fallback: T): T {
@@ -377,6 +380,106 @@ ${newsSection}
 不要下交易建議。`;
 }
 
+// ─── Block B: 近期新聞摘要 ──────────────────────────────────────────────────────
+
+export interface GenerateBlockBResult {
+  blockBBody: string;
+  model: string;
+}
+
+export async function generateBlockB(
+  symbol: string,
+  news: StockNewsArticle[]
+): Promise<GenerateBlockBResult> {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) throw new Error('ANTHROPIC_API_KEY is not set');
+  if (!news || news.length === 0) return { blockBBody: '（近期無相關新聞）', model: MODEL };
+
+  const client = new Anthropic({ apiKey });
+  const newsText = buildNewsText(news);
+
+  const prompt = `你是財務新聞整理員。以下是 ${symbol} 最近 30 天的新聞。
+
+任務：純粹整理「新聞裡說了什麼事」，條列輸出。
+
+規則：
+- 每條新聞一行，格式：「[日期] 事件描述（來源）」
+- 只描述新聞裡有的事實，不加評斷、不做比對
+- 不提財報數字（除非新聞本身有提）
+- 禁止使用你的訓練知識補充任何內容
+- 沒有相關新聞就說「近期無相關新聞」
+- 使用繁體中文
+
+最近 30 天新聞：
+${newsText}`;
+
+  const response = await client.messages.create({
+    model: MODEL,
+    max_tokens: 1500,
+    messages: [{ role: 'user', content: prompt }],
+  });
+
+  const text = response.content[0].type === 'text' ? response.content[0].text : '（無法生成新聞摘要）';
+  return { blockBBody: text.trim(), model: MODEL };
+}
+
+// ─── Block C: 影子JG總結 ──────────────────────────────────────────────────────
+
+export interface GenerateBlockCResult {
+  blockCBody: string;
+  model: string;
+}
+
+export async function generateBlockC(
+  symbol: string,
+  blockABody: string,
+  blockBBody: string,
+): Promise<GenerateBlockCResult> {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) throw new Error('ANTHROPIC_API_KEY is not set');
+
+  const client = new Anthropic({ apiKey });
+
+  const prompt = `你是「影子JG」，一個有立場、有判斷力的台灣投資老手。
+
+以下是兩份資料：
+
+【法說會重點（Block A）】
+${blockABody.slice(0, 5000)}
+
+【近期新聞摘要（Block B）】
+${blockBBody.slice(0, 3000)}
+
+任務：根據 Block A 的法說會承諾，對照 Block B 的近期新聞，輸出【影子JG總結】。
+
+🔴 嚴格規則（違反就是錯誤）：
+- Block B 是你唯一可以引用的外部資料來源
+- Block B 沒有提到的事情，必須寫「新聞未涵蓋，待驗證」
+- 禁止使用你的訓練知識推斷任何事實
+- 禁止說「應該已經」「可能已經」「預計已」等推測語句
+- 禁止 markdown 符號（##、**、--- 等）
+- 必須用繁體中文
+
+輸出格式：
+- 第一行：「【影子JG總結】」（一字不差）
+- 對得上的：✅ 開頭（必須引用 Block B 的具體新聞）
+- 尚待觀察的：⚠️ 開頭（Block B 未涵蓋 → 寫「新聞未涵蓋，待驗證」）
+- 最後一個 ⚠️ 加一行：「上面這些如果戰友有看到相關消息，記得告訴JG！」
+- 警訊：🔴 開頭（Block B 有矛盾新聞才能寫）
+- 最後一句：整體判斷（加速 / 持平 / 警示）`;
+
+  const response = await client.messages.create({
+    model: MODEL,
+    max_tokens: 2000,
+    messages: [{ role: 'user', content: prompt }],
+  });
+
+  const text = response.content[0].type === 'text' ? response.content[0].text : '';
+  const body = text.trim().startsWith('【影子JG總結】') ? text.trim() : `【影子JG總結】\n${text.trim()}`;
+
+  return { blockCBody: body, model: MODEL };
+}
+
 // ─── Part B only: 只更新影子JG總結（法說會方向不變）────────────────────────────
 
 export async function generateShadowJGOnly(
@@ -384,45 +487,13 @@ export async function generateShadowJGOnly(
   earningsDirectionContext: string,
   news: StockNewsArticle[]
 ): Promise<GenerateShadowJGOnlyResult> {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) throw new Error('ANTHROPIC_API_KEY is not set');
-
-  const client = new Anthropic({ apiKey });
-  const newsText = buildNewsText(news);
-
-  const prompt = `你是「影子JG」，一個有立場、有判斷力的台灣投資老手。
-
-以下是 ${symbol} 的法說會分析（這部分不需要重新生成，保持不動）：
-
----
-${earningsDirectionContext.slice(0, 6000)}
----
-
-根據以上法說會內容，以及下方最新 30 天新聞，只輸出【影子JG總結】這個段落。
-
-規則：
-- 第一行必須是「【影子JG總結】」（含全形括號，一字不差）
-- 對得上法說會承諾的用 ✅ 開頭
-- 尚待觀察的用 ⚠️ 開頭，尚待觀察的最後一行加「上面這些如果戰友有看到相關消息，記得告訴JG！」
-- 警訊用 🔴 開頭
-- 語氣口語，像跟朋友說話
-- 結論一句話收尾
-- 禁止 markdown 符號（##、**、--- 等）
-- 必須用繁體中文
-
-最近 30 天新聞：
-${newsText}`;
-
-  const response = await client.messages.create({
-    model: MODEL,
-    max_tokens: 3000,
-    messages: [{ role: 'user', content: prompt }],
-  });
-
-  const text = response.content[0].type === 'text' ? response.content[0].text : '';
-  const body = text.trim().startsWith('【影子JG總結】') ? text.trim() : `【影子JG總結】\n${text.trim()}`;
-
-  return { shadowJGSummaryBody: body, model: MODEL };
+  // 三段式：先生成 Block B（新聞摘要），再生成 Block C（影子JG總結）
+  const blockBResult = await generateBlockB(symbol, news);
+  const blockCResult = await generateBlockC(symbol, earningsDirectionContext, blockBResult.blockBBody);
+  return {
+    shadowJGSummaryBody: blockCResult.blockCBody,
+    model: blockCResult.model,
+  };
 }
 
 // ─── Response parser ──────────────────────────────────────────────────────────
