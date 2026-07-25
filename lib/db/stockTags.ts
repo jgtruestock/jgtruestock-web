@@ -1,8 +1,9 @@
 import { getJgtDb } from '../mongodb';
 
 export const PRESET_TAGS = [
-  'AI/ML', '半導體', '雲端/SaaS', '能源', '核能', '太空',
-  '生技', '量子電腦', '網路安全', '金融科技', '基礎建設', '加密貨幣'
+  'AI/ML', '光通訊', '加密/金融', '半導體', '國防', '基因編輯',
+  '太空', '核能', '機器人', '生技/製藥', '網路安全', '能源/電力',
+  '雲端/SaaS', '量子電腦'
 ];
 
 export async function getTagsMap(symbols: string[]): Promise<Record<string, string[]>> {

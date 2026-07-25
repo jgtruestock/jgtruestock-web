@@ -8,6 +8,12 @@ import ActivityTracker from '@/components/ActivityTracker';
 import WelcomeModal from '@/components/WelcomeModal';
 import AnnouncementModal from '@/components/AnnouncementModal';
 
+const MASTER_TAGS = [
+  'AI/ML', '光通訊', '加密/金融', '半導體', '國防', '基因編輯',
+  '太空', '核能', '機器人', '生技/製藥', '網路安全', '能源/電力',
+  '雲端/SaaS', '量子電腦'
+];
+
 interface MentionRecord {
   _id: string;
   symbol: string;
@@ -213,7 +219,7 @@ export default function StocksPage() {
 
         {/* Tag Filter */}
         {(() => {
-          const usedTags = Array.from(new Set(records.flatMap(r => r.tags || []))).sort();
+          const usedTags = MASTER_TAGS;
           if (usedTags.length === 0) return null;
           return (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
