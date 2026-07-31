@@ -44,14 +44,16 @@ export async function GET(request: Request) {
   const tracker13fDb = await get13fDb();
   const jgtDb = await getJgtDb();
 
-  // 1. Collect all active symbols
-  const [picksCache, picksManual] = await Promise.all([
+  // 1. Collect all active symbols (from all three sources)
+  const [picksCache, picksManual, commentaryDocs] = await Promise.all([
     tracker13fDb.collection('jg_picks_cache').find({}).toArray(),
     tracker13fDb.collection('jg_picks_manual').find({}).toArray(),
+    // Also include any stock that has a commentary page
+    jgtDb.collection('jg_commentary').find({}).project({ symbol: 1, _id: 0 }).toArray(),
   ]);
 
   const symbolSet = new Set<string>();
-  for (const doc of [...picksCache, ...picksManual]) {
+  for (const doc of [...picksCache, ...picksManual, ...commentaryDocs]) {
     if (doc.symbol) symbolSet.add(String(doc.symbol).toUpperCase());
   }
 

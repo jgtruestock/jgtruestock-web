@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { get13fDb } from '@/lib/mongodb';
+import { get13fDb, getJgtDb } from '@/lib/mongodb';
 import { fetchStockNews, fetchSecFilings, fetchPressReleases } from '@/lib/fmp';
 import { upsertStockNews } from '@/lib/db/stockNews';
 import { upsertStockFilings } from '@/lib/db/stockFilings';
@@ -35,10 +35,10 @@ async function handler(req: NextRequest) {
   }
 
   try {
-    // ── 1. Get active symbol list from 13f-tracker DB ─────────────────
-    const db13f = await get13fDb();
+    // ── 1. Get active symbol list (all three sources) ─────────────────
+    const [db13f, jgtDb] = await Promise.all([get13fDb(), getJgtDb()]);
 
-    const [cacheSymbols, manualSymbols] = await Promise.all([
+    const [cacheSymbols, manualSymbols, commentarySymbols] = await Promise.all([
       db13f
         .collection('jg_picks_cache')
         .find({})
@@ -49,12 +49,19 @@ async function handler(req: NextRequest) {
         .find({ active: { $ne: false } }) // active=true or field missing
         .project<{ symbol: string }>({ symbol: 1, _id: 0 })
         .toArray(),
+      // Also include any stock that has a commentary page (prevents missing stocks)
+      jgtDb
+        .collection('jg_commentary')
+        .find({})
+        .project<{ symbol: string }>({ symbol: 1, _id: 0 })
+        .toArray(),
     ]);
 
     const allSymbols = [
       ...new Set([
         ...cacheSymbols.map((d) => d.symbol),
         ...manualSymbols.map((d) => d.symbol),
+        ...commentarySymbols.map((d) => d.symbol),
       ]),
     ].filter(Boolean);
 
