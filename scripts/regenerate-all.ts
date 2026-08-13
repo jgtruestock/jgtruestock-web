@@ -155,7 +155,14 @@ async function main() {
   ]);
   const symbolSet = new Set<string>();
   for (const d of [...cache, ...manual]) if (d.symbol) symbolSet.add(String(d.symbol).toUpperCase());
-  const symbols = Array.from(symbolSet).sort();
+  let symbols = Array.from(symbolSet).sort();
+
+  // Support REGEN_SYMBOLS env var to limit to a subset (comma-separated)
+  if (process.env.REGEN_SYMBOLS) {
+    const subset = process.env.REGEN_SYMBOLS.split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
+    symbols = symbols.filter(s => subset.includes(s));
+    console.log(`⚡ Filtered to ${symbols.length} symbols: ${symbols.join(', ')}`);
+  }
 
   console.log(`\n🚀 Batch regenerate: ${symbols.length} symbols`);
   console.log(`Symbols: ${symbols.join(', ')}\n`);
