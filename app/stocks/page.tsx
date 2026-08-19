@@ -51,18 +51,8 @@ export default function StocksPage() {
   const [search, setSearch] = useState('');
   const [activeTag, setActiveTag] = useState<string | null>(null);
 
-  useEffect(() => {
-    try {
-      const seen = localStorage.getItem('jg_guide_seen');
-      if (!seen) {
-        // Set the flag immediately to prevent redirect loops
-        localStorage.setItem('jg_guide_seen', '1');
-        router.replace('/guide');
-      }
-    } catch {
-      // localStorage not available (e.g. private mode restrictions) — skip redirect
-    }
-  }, []);
+  // Guide redirect removed — /guide is accessible directly at /guide
+  // Previously caused redirect loops in certain Chrome states (2026-08-19 fix)
 
   const fetchData = useCallback(async () => {
     try {
