@@ -57,9 +57,14 @@ export default function StocksPage() {
   const fetchData = useCallback(async () => {
     try {
       const res = await fetch(`/api/mentions?sort=${sortKey}&order=${sortOrder}`);
+      if (!res.ok) {
+        console.warn('Failed to fetch mentions:', res.status);
+        setLoading(false);
+        return;
+      }
       const data = await res.json();
-      setRecords(data.records || []);
-      setStats(data.stats || null);
+      setRecords(Array.isArray(data.records) ? data.records : []);
+      setStats(data.stats ?? null);
     } catch (err) {
       console.error('Failed to fetch mentions:', err);
     } finally {
