@@ -18,6 +18,18 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
+    async signIn({ user, account }) {
+      // Log login event on first sign-in (replaces post-login route logging)
+      if (account && user?.email) {
+        try {
+          const { logLogin } = await import('@/lib/db/activityLogs');
+          logLogin({ email: user.email.toLowerCase(), ip: '0.0.0.0', userAgent: '', device: 'desktop' }).catch(() => {});
+        } catch {
+          // never block sign-in
+        }
+      }
+      return true;
+    },
     async jwt({ token, account, profile }) {
       // Preserve provider info on first sign-in
       if (account) {
