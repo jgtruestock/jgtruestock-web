@@ -19,6 +19,16 @@ const MEMBER_PATHS = ['/stocks', '/guide'];
 // API member-only paths
 const MEMBER_API_PATHS = ['/api/mentions', '/api/stocks'];
 
+// Safe getToken wrapper — never let a crash turn into an undefined response
+async function safeGetToken(req: NextRequest) {
+  try {
+    return await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+  } catch (err) {
+    console.error('[proxy] getToken error:', err);
+    return null;
+  }
+}
+
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
@@ -29,7 +39,7 @@ export async function proxy(req: NextRequest) {
 
   // /verify — 綁定頁，已登入才能進，不需要 isYTMember
   if (pathname.startsWith('/verify')) {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const token = await safeGetToken(req);
     if (!token) return NextResponse.redirect(new URL('/login', req.url));
     return NextResponse.next();
   }
@@ -40,7 +50,7 @@ export async function proxy(req: NextRequest) {
 
   // /api/admin/** — return JSON errors
   if (pathname.startsWith('/api/admin/')) {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const token = await safeGetToken(req);
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     if (!isAdmin(token)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     return NextResponse.next();
@@ -48,7 +58,7 @@ export async function proxy(req: NextRequest) {
 
   // /admin/** — redirect
   if (pathname.startsWith('/admin/') || pathname === '/admin') {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const token = await safeGetToken(req);
     if (!token) {
       const loginUrl = new URL('/login/admin', req.url);
       loginUrl.searchParams.set('callbackUrl', req.url);
@@ -60,7 +70,7 @@ export async function proxy(req: NextRequest) {
 
   // /api/mentions and /api/stocks/** — member-only data APIs
   if (MEMBER_API_PATHS.some((p) => pathname.startsWith(p))) {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const token = await safeGetToken(req);
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     if (isAdmin(token)) return NextResponse.next();
     // Member verification enforced
@@ -70,7 +80,7 @@ export async function proxy(req: NextRequest) {
 
   // Member-only front-end paths
   if (MEMBER_PATHS.some((p) => pathname.startsWith(p))) {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const token = await safeGetToken(req);
     if (!token) {
       return NextResponse.redirect(new URL('/login', req.url));
     }
