@@ -80,6 +80,17 @@ export async function proxy(req: NextRequest) {
 
   // Member-only front-end paths
   if (MEMBER_PATHS.some((p) => pathname.startsWith(p))) {
+    // DEBUG: return token info as response for diagnosis
+    if (req.nextUrl.searchParams.get('debug') === 'token1234') {
+      const t = await safeGetToken(req);
+      return NextResponse.json({
+        hasToken: !!t,
+        email: t?.email,
+        provider: t?.provider,
+        isAdmin: t ? isAdmin(t) : false,
+        isYTMember: t?.isYTMember,
+      });
+    }
     const token = await safeGetToken(req);
     if (!token) {
       return NextResponse.redirect(new URL('/login', req.url));
