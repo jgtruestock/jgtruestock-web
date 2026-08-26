@@ -19,7 +19,7 @@ const MEMBER_PATHS = ['/stocks', '/guide'];
 // API member-only paths
 const MEMBER_API_PATHS = ['/api/mentions', '/api/stocks'];
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   // /api/cron/** — skip (handled by CRON_SECRET)
@@ -33,10 +33,6 @@ export async function middleware(req: NextRequest) {
     if (!token) return NextResponse.redirect(new URL('/login', req.url));
     return NextResponse.next();
   }
-  if (false) {  // dead code placeholder
-    return NextResponse.next();
-  }
-
   // /not-member — 公開頁面，不擋
   if (pathname.startsWith('/not-member')) {
     return NextResponse.next();
