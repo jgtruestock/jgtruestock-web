@@ -19,10 +19,19 @@ const MEMBER_PATHS = ['/stocks', '/guide'];
 // API member-only paths
 const MEMBER_API_PATHS = ['/api/mentions', '/api/stocks'];
 
-// Safe getToken wrapper — never let a crash turn into an undefined response
+// Safe getToken wrapper — explicitly try both secure and non-secure cookie names
+// because Next.js 16 Edge proxy may not have NEXTAUTH_URL available for auto-detection
 async function safeGetToken(req: NextRequest) {
   try {
-    return await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const secret = process.env.NEXTAUTH_SECRET;
+    if (!secret) return null;
+    // Try secure cookie first (production: __Secure-next-auth.session-token)
+    let token = await getToken({ req, secret, cookieName: '__Secure-next-auth.session-token' });
+    if (!token) {
+      // Fallback: non-secure cookie name (local dev or if detection fails)
+      token = await getToken({ req, secret, cookieName: 'next-auth.session-token' });
+    }
+    return token;
   } catch (err) {
     console.error('[proxy] getToken error:', err);
     return null;
