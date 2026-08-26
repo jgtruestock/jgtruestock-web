@@ -79,9 +79,20 @@ export async function proxy(req: NextRequest) {
   }
 
   // Member-only front-end paths
-  // DIAGNOSTIC: temporarily open /stocks to all to identify root cause
   if (MEMBER_PATHS.some((p) => pathname.startsWith(p))) {
-    return NextResponse.next(); // TEMP: bypass auth for diagnostic
+    const token = await safeGetToken(req);
+    if (!token) {
+      return NextResponse.redirect(new URL('/login', req.url));
+    }
+
+    // Admin → always allow (Discord or Google admin email)
+    if (isAdmin(token)) return NextResponse.next();
+
+    // Member verification enforced
+    if (!token.isYTMember) {
+      return NextResponse.redirect(new URL('/verify', req.url));
+    }
+    return NextResponse.next();
   }
 
   return NextResponse.next();
