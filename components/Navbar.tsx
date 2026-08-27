@@ -40,6 +40,7 @@ export default function Navbar() {
       <div className="nav-links" style={{ display: 'flex', gap: 28, alignItems: 'center' }}>
         <NavLink href="/daily" active={pathname === '/daily'}>每日分享</NavLink>
         <NavLink href="/stocks" active={pathname?.startsWith('/stocks') ?? false}>頻道追蹤</NavLink>
+        <NavLink href="/biotech" active={pathname?.startsWith('/biotech') ?? false}>🧬 生技追蹤</NavLink>
       </div>
 
       {/* User / Auth */}
