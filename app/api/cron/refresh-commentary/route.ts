@@ -8,6 +8,9 @@
  */
 import { NextResponse } from 'next/server';
 import { get13fDb, getJgtDb } from '@/lib/mongodb';
+
+// Allow up to 300s for AI commentary generation across all symbols
+export const maxDuration = 300;
 import { fetchEarningsTranscript } from '@/lib/fmp';
 import { generateCommentary, generateShadowJGOnly } from '@/lib/ai/generateCommentary';
 import { getStockNews } from '@/lib/db/stockNews';
