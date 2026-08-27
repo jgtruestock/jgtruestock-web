@@ -3,7 +3,7 @@
 import { useSession, signOut } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import NextImage from 'next/image';
+import Image from 'next/image';
 
 export default function Navbar() {
   const { data: session } = useSession();
@@ -33,7 +33,6 @@ export default function Navbar() {
           width={120}
           style={{ objectFit: 'contain', height: 40, width: 'auto' }}
           priority
-          unoptimized
         />
       </Link>
 
