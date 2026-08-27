@@ -166,7 +166,7 @@ function formatDate(dateStr: string | null | undefined): string {
 function formatGainPct(pct: number): { label: string; color: string } {
   const pos = pct >= 0;
   return {
-    label: `${pos ? '▲' : '▼'}${pos ? '+' : ''}${pct.toFixed(1)}%`,
+    label: `${pos ? '▲' : '▼'}${pos ? '+' : ''}${Number(pct).toFixed(1)}%`,
     color: pos ? '#1A7340' : '#C0392B',
   };
 }
@@ -246,7 +246,7 @@ function StockHeader({
           )}
           {stockInfo.mentionClose != null && (
             <>
-              <span>當時 ${stockInfo.mentionClose.toFixed(2)}</span>
+              <span>當時 ${Number(stockInfo.mentionClose || 0).toFixed(2)}</span>
               <span style={{ color: '#CCC' }}>·</span>
             </>
           )}
@@ -256,7 +256,7 @@ function StockHeader({
           {stockInfo?.latestClose != null && (
             <>
               <span style={{ color: '#CCC' }}>·</span>
-              <span style={{ fontFamily: "'Raleway', sans-serif", fontWeight: 600, color: '#c9a84c' }}>${stockInfo.latestClose.toFixed(2)}</span>
+              <span style={{ fontFamily: "'Raleway', sans-serif", fontWeight: 600, color: '#c9a84c' }}>${Number(stockInfo.latestClose || 0).toFixed(2)}</span>
             </>
           )}
         </div>

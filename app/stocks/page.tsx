@@ -80,12 +80,15 @@ export default function StocksPage() {
     return dateStr.slice(0, 10);
   };
 
-  const formatGain = (pct: number) => {
-    const pos = pct >= 0;
+  const formatGain = (pct: number | string | null | undefined) => {
+    const n = Number(pct) || 0;
+    const pos = n >= 0;
     const arrow = pos ? '▲' : '▼';
     const sign = pos ? '+' : '';
-    return { label: `${arrow}${sign}${pct.toFixed(1)}%`, pos };
+    return { label: `${arrow}${sign}${n.toFixed(1)}%`, pos };
   };
+
+  const toPrice = (v: number | string | null | undefined) => Number(v) || 0;
 
   if (loading && records.length === 0) {
     return (
@@ -407,7 +410,7 @@ export default function StocksPage() {
                           whiteSpace: 'nowrap',
                         }}
                       >
-                        ${rec.priceAtMention.toFixed(2)}
+                        ${toPrice(rec.priceAtMention).toFixed(2)}
                       </td>
                       <td
                         style={{
@@ -419,7 +422,7 @@ export default function StocksPage() {
                           whiteSpace: 'nowrap',
                         }}
                       >
-                        ${rec.currentPrice.toFixed(2)}
+                        ${toPrice(rec.currentPrice).toFixed(2)}
                       </td>
                       <td
                         style={{
@@ -573,7 +576,7 @@ export default function StocksPage() {
                         gap: 6,
                       }}
                     >
-                      <span>{rec.companyName} · ${rec.priceAtMention.toFixed(2)} → ${rec.currentPrice.toFixed(2)}</span>
+                      <span>{rec.companyName} · ${toPrice(rec.priceAtMention).toFixed(2)} → ${toPrice(rec.currentPrice).toFixed(2)}</span>
                       {rec.tags && rec.tags.length > 0 && (
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3, marginTop: 2 }}>
                           {rec.tags.map(tag => (

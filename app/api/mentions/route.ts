@@ -127,9 +127,9 @@ export async function GET(req: NextRequest) {
         if (s.length >= 10 && s[4] === '-') return s.slice(0, 10);
         return s;
       })(),
-      priceAtMention: (rec.mentionClose as number) || 0,
-      currentPrice: (rec.latestClose as number) || 0,
-      gainPct: (rec.performancePct as number) || 0,
+      priceAtMention: Number(rec.mentionClose) || 0,
+      currentPrice: Number(rec.latestClose) || 0,
+      gainPct: Number(rec.performancePct) || 0,
       source: (rec.source as string) || 'member-channel',
       mentionCount: (rec.mentionCount as number) || 1,
       _fromMentionHistory: (rec._fromMentionHistory as boolean) || false,
