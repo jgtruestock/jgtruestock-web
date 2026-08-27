@@ -1,14 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { getJgtDb } from '@/lib/mongodb';
 
 export async function GET(req: NextRequest) {
-  // Auth: member or admin required (proxy handles redirect, this is API double-check)
-  const session = await getServerSession(authOptions);
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  // Auth handled by proxy.ts (MEMBER_API_PATHS includes /api/biotech)
 
   try {
     const { searchParams } = new URL(req.url);
