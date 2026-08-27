@@ -14,10 +14,10 @@ function isAdmin(token: any): boolean {
 }
 
 // Front-end member-only paths
-const MEMBER_PATHS = ['/stocks', '/guide'];
+const MEMBER_PATHS = ['/stocks', '/guide', '/biotech'];
 
 // API member-only paths
-const MEMBER_API_PATHS = ['/api/mentions', '/api/stocks'];
+const MEMBER_API_PATHS = ['/api/mentions', '/api/stocks', '/api/biotech'];
 
 // Safe getToken wrapper — explicitly try both secure and non-secure cookie names
 // because Next.js 16 Edge proxy may not have NEXTAUTH_URL available for auto-detection
@@ -129,6 +129,8 @@ export const config = {
     '/stocks',
     '/guide',
     '/guide/:path*',
+    '/biotech',
+    '/biotech/:path*',
     '/verify',
     '/verify/:path*',
     '/not-member',
