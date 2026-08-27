@@ -3,7 +3,7 @@
 import { useSession, signOut } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
+import NextImage from 'next/image';
 
 export default function Navbar() {
   const { data: session } = useSession();
@@ -33,6 +33,7 @@ export default function Navbar() {
           width={120}
           style={{ objectFit: 'contain', height: 40, width: 'auto' }}
           priority
+          unoptimized
         />
       </Link>
 
@@ -47,12 +48,13 @@ export default function Navbar() {
         {session ? (
           <>
             {session.user?.image && (
-              <Image
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
                 src={session.user.image}
                 alt="avatar"
                 width={28}
                 height={28}
-                style={{ borderRadius: '50%' }}
+                style={{ borderRadius: '50%', width: 28, height: 28, objectFit: 'cover' }}
                 onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
               />
             )}
