@@ -63,8 +63,13 @@ export async function GET(request: Request) {
   const allSymbols = Array.from(symbolSet);
   console.log(`[refresh-commentary] Found ${allSymbols.length} symbols:`, allSymbols);
 
-  // Process all symbols (63 × 1s sleep ≈ 63s, well within 300s limit)
-  const symbols = allSymbols;
+  // Support limit/offset for batched manual runs
+  const url = new URL(request.url);
+  const limitParam = url.searchParams.get('limit');
+  const offsetParam = url.searchParams.get('offset');
+  const limit = limitParam ? parseInt(limitParam, 10) : allSymbols.length;
+  const offset = offsetParam ? parseInt(offsetParam, 10) : 0;
+  const symbols = allSymbols.slice(offset, offset + limit);
 
   let refreshed = 0;
   let skipped = 0;
