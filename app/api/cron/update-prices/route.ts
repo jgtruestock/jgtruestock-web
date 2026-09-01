@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getJgtDb } from '@/lib/mongodb';
+import { getJgtDb, get13fDb } from '@/lib/mongodb';
 import { getCurrentPrice } from '@/lib/fmp';
 
 export async function GET(req: NextRequest) {
@@ -20,18 +20,26 @@ export async function GET(req: NextRequest) {
     let updated = 0;
     let failed = 0;
 
-    // Get unique symbols
+    // Get unique symbols from jg_mention_history
     const symbols = [...new Set(records.map((r) => r.symbol as string))];
 
+    // Also get symbols from jg_picks_cache (13f-tracker DB)
+    const db13f = await get13fDb();
+    const cacheRecords = await db13f.collection('jg_picks_cache').find({}).toArray();
+    const cacheSymbols = [...new Set(cacheRecords.map((r) => r.symbol as string))];
+
+    // Merge all unique symbols
+    const allSymbols = [...new Set([...symbols, ...cacheSymbols])];
+
     const priceMap: Record<string, number | null> = {};
-    for (const symbol of symbols) {
+    for (const symbol of allSymbols) {
       const price = await getCurrentPrice(symbol);
       priceMap[symbol] = price;
       // Small delay to avoid rate limiting
-      await new Promise((r) => setTimeout(r, 100));
+      await new Promise((r) => setTimeout(r, 150));
     }
 
-    // Update each record
+    // Update jg_mention_history records
     for (const record of records) {
       const currentPrice = priceMap[record.symbol];
       if (currentPrice === null || currentPrice === undefined) {
@@ -57,10 +65,26 @@ export async function GET(req: NextRequest) {
       updated++;
     }
 
+    // Update jg_picks_cache latestClose (daily, split-adjusted via FMP)
+    const today = new Date().toISOString().slice(0, 10);
+    let cacheUpdated = 0;
+    let cacheFailed = 0;
+    for (const symbol of cacheSymbols) {
+      const price = priceMap[symbol];
+      if (price === null || price === undefined) { cacheFailed++; continue; }
+      await db13f.collection('jg_picks_cache').updateMany(
+        { symbol },
+        { $set: { latestClose: price, latestCloseDate: today } }
+      );
+      cacheUpdated++;
+    }
+
     return NextResponse.json({
       success: true,
       updated,
       failed,
+      cacheUpdated,
+      cacheFailed,
       timestamp: new Date().toISOString(),
     });
   } catch (err) {
